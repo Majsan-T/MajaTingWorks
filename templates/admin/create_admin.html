@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Skapa en ny adminanvändare</h2>
+    <!-- Tillbaka-knapp -->
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary mb-4">
+        <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+    </a>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+    </form>
+</div>
+{% endblock %}

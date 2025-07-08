@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Adminpanel{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4"><i class="bi bi-tools"></i> Adminpanel</h1>
+
+  <!-- Översiktspanel med genvägar och statistik -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card text-bg-primary mb-3" style="background-image: url('{{ url_for('static', filename='assets/img/admin-card-bg.png') }}'); background-size: cover; background-position: center;">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-people"></i> Användare</h5>
+          <p class="card-text display-6 fw-bold">{{ user_count }}</p>
+          <a href="{{ url_for('admin.create_user') }}" class="btn btn-outline-light btn-sm mt-2">
+            <i class="bi bi-person-fill-add"></i> Lägg till användare
+          </a>
+          <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-light btn-sm mt-2">
+            <i class="bi bi-person-fill-gear"></i> Hantera användare
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-success mb-3" style="background-image: url('{{ url_for('static', filename='assets/img/admin-card-bg.png') }}'); background-size: cover; background-position: center;">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-journal"></i> Inlägg</h5>
+          <p class="card-text display-6 fw-bold">{{ post_count }}</p>
+          <a href="{{ url_for('blog.new_post') }}" class="btn btn-outline-light btn-sm mt-2">
+            <i class="bi bi-plus"></i> Skapa nytt inlägg
+          </a>
+          <a href="{{ url_for('admin.manage_posts') }}" class="btn btn-outline-light btn-sm mt-2">
+            <i class="bi bi-journal"></i> Hantera blogginlägg
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-warning mb-3" style="background-image: url('{{ url_for('static', filename='assets/img/admin-card-bg.png') }}'); background-size: cover; background-position: center;">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-chat-left-text"></i> Kommentarer</h5>
+          <p class="card-text display-6 fw-bold">{{ comment_count }}</p>
+          <a href="{{ url_for('admin.manage_comments') }}" class="btn btn-outline-dark btn-sm mt-2">
+            <i class="bi bi-chat-dots"></i> Hantera kommentarer
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for section in dashboard_sections %}
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ section.title }}</h5>
+            <ul class="list-unstyled">
+              {% for link in section.links %}
+              <li class="mb-2">
+                <a href="{{ url_for(link.endpoint) }}" class="text-decoration-none">
+                  <i class="{{ link.icon }} me-2"></i> {{ link.label }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if flagged_comments %}
+  <div class="mt-5">
+    <h3><i class="bi bi-flag text-warning"></i> Flaggar för granskning</h3>
+    {% for comment in flagged_comments %}
+      <div class="card border-warning mb-3">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-person-fill"></i> {{ comment.comment_author.name }}
+          </h5>
+          <p class="card-text">{{ comment.text[:150] }}{% if comment.text|length > 150 %}...{% endif %}</p>
+          <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('admin.unflag_comment', comment_id=comment.id) }}">
+              {{ delete_form.hidden_tag() }}
+              <button class="btn btn-sm btn-outline-success">
+                <i class="bi bi-check-circle"></i> Godkänn
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin.delete_comment', comment_id=comment.id) }}" onsubmit="return confirm('Är du säker på att du vill ta bort denna kommentar?')">
+              {{ delete_form.hidden_tag() }}
+              <button class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> Radera
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

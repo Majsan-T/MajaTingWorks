@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Sidan finns inte{% endblock %}
+{% block content %}
+<div class="text-center mt-5">
+    <h1 class="display-4">404 - Sidan finns inte</h1>
+    <img src="{{ url_for('static', filename='assets/img/404.png') }}" alt="Bild som visar sidan finns inte" style="width: 75%; height: auto;">
+    <p class="lead">Du har kommit till en sida som inte finns. Jag förstår inte hur du då kunde hamna här och få det här meddelandet då men så är det.</p>
+    <a href="{{ url_for('pages.home') }}" class="btn btn-primary mt-4">Tillbaka till startsidan</a>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4"><i class="bi bi-images"></i> Hantera uppladdade bilder</h1>
+
+    <!-- Tillbaka-knapp -->
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary mb-4">
+        <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+    </a>
+
+    <!-- Filtreringsformulär -->
+    <form method="get" class="mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0" for="folder">Visa bilder från mapp:</label>
+            </div>
+            <div class="col-auto">
+                <select name="folder" id="folder" class="form-select" onchange="this.form.submit()">
+                    <option value="">Alla mappar</option>
+                    {% for f in folders %}
+                    <option value="{{ f }}" {% if f == selected_folder %}selected{% endif %}>{{ f }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label mb-0" for="sort">Sortera:</label>
+            </div>
+            <div class="col-auto">
+                <select name="sort" id="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Namn A–Ö</option>
+                    <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Namn Ö–A</option>
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <!-- Flashmeddelanden -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if images %}
+    <p class="text-muted">
+        Visar {{ (page - 1) * 12 + 1 }}–{{ (page - 1) * 12 + images|length }} av totalt {{ total_images }} bilder
+    </p>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      {% for image in images %}
+      <div class="col">
+        <div class="card h-100 shadow-sm rounded-4 brown-bg d-flex flex-column">
+          <img src="{{ url_for('static', filename=image.url) }}" class="card-img-top" alt="{{ image.filename }}">
+          <div class="card-body d-flex flex-column justify-content-between align-items-center">
+              {% set category_name = category_mapping.get(image.filename) %}
+              {% if category_name %}
+                <div class="small text-muted mb-1">{{ category_name }}</div>
+              {% endif %}
+            <small class="text-muted text-truncate me-2 mt-auto">{{ image.name }}</small>
+            <form action="{{ url_for('admin.delete_upload') }}" method="post">
+              {{ delete_forms[image.folder ~ '/' ~ image.filename].hidden_tag() }}
+              {{ delete_forms[image.folder ~ '/' ~ image.filename].folder }}
+              {{ delete_forms[image.folder ~ '/' ~ image.filename].filename }}
+              <button type="submit" class="btn btn-danger btn-sm">Ta bort</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Paginering med sidor -->
+    <nav aria-label="Paginering">
+      <ul class="pagination justify-content-center mt-4">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('admin.manage_uploads', page=page - 1, folder=selected_folder, sort=sort_by) }}">Föregående</a>
+        </li>
+
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('admin.manage_uploads', page=p, folder=selected_folder, sort=sort_by) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('admin.manage_uploads', page=page + 1, folder=selected_folder, sort=sort_by) }}">Nästa</a>
+        </li>
+      </ul>
+    </nav>
+
+    {% else %}
+    <div class="alert alert-info mt-4">Inga uppladdade bilder hittades.</div>
+    {% endif %}
+</div>
+{% endblock %}

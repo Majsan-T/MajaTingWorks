@@ -1,0 +1,470 @@
+.content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+}
+
+/* ── Färgvariabler ─────────────────────────────── */
+:root {
+  --accent: #b4693e;
+  --accent-hover: #a25834;
+  --bg-soft: #fdf7f1;
+  --border-soft: #e9c9a3;
+  --input-border: #bfa084;
+  --focus-shadow: rgba(180, 105, 62, 0.25);
+}
+
+/* ── Knappar ───────────────────────────────────── */
+.btn {
+  position: relative;
+  color: #fff;
+  border-radius: 50rem;
+  background-color: var(--accent);
+  border: none;
+  box-shadow: 5px 5px 10px rgba(102, 88, 67, 0.2), -5px -5px 10px rgba(255, 255, 255, 0.4);
+  transition: all 0.15s ease-in-out;
+}
+.btn:hover,
+.btn:focus,
+.btn:active,
+.btn:active:focus {
+  background-color: var(--accent-hover);
+  color: #fff;
+  box-shadow: 5px 5px 10px rgba(55, 94, 148, 0.2), -5px -5px 10px rgba(255, 255, 255, 0.4);
+}
+.btn:active,
+.btn:active:focus {
+  border-color: transparent;
+  box-shadow: inset 2px 3px 6px rgba(0, 0, 0, 0.2), inset -3px -2px 6px rgba(255, 255, 255, 0.2);
+}
+.btn-link {
+  font-weight: 600;
+  color: var(--accent);
+}
+.btn-link:hover,
+.btn-link:active,
+.btn-link:active:focus {
+  color: #212529;
+}
+.btn.disabled {
+  color: #7b8ab8;
+  background-color: #d9e3f1;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1), -2px -2px 5px rgba(255, 255, 255, 0.5);
+}
+.btn-standard {
+  margin-bottom: 0.5rem;
+  display: inline-block;
+  min-width: 220px;
+}
+.btn-primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* ── Knappar specifika för startsidan/index ── */
+.index-btn {
+  position: relative;
+  color: #fff;
+  border-radius: 50rem;
+  border: none;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: 5px 5px 10px rgba(102, 88, 67, 0.2), -5px -5px 10px rgba(255, 255, 255, 0.4);
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.index-btn:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.5);
+}
+
+/* Primär knapp */
+.index-btn-primary {
+  background-color: #8b5e3c;
+}
+.index-btn-primary:hover,
+.index-btn-primary:focus {
+  background-color: #754b30;
+}
+
+/* Sekundär knapp */
+.index-btn-secondary {
+  background-color: #d49257;
+}
+.index-btn-secondary:hover,
+.index-btn-secondary:focus {
+  background-color: #c17d41;
+}
+
+
+/* ── Hero Bakgrunder ───────────────────────────── */
+.page-hero {
+  min-height: 400px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #4e2a3e;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-blend-mode: overlay;
+}
+.blog-post-hero {
+  background: linear-gradient(rgba(255,245,230,0.7), rgba(255,245,230,0.7)),
+              url("../assets/hero-blog.png") center/cover no-repeat;
+  padding: 2rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4e2a3e;
+  text-align: center;
+  min-height: 200px;
+}
+
+.contact-hero {
+  background-image: linear-gradient(rgba(255, 245, 230, 0.5), rgba(255, 245, 230, 0.5)),
+                    url("../assets/hero-contact.png");
+}
+.blog-hero {
+  background-image: linear-gradient(rgba(255, 245, 230, 0.5), rgba(255, 245, 230, 0.5)),
+                    url("../assets/hero-blog.png");
+}
+.portfolio-hero {
+  background-image: linear-gradient(rgba(255, 245, 230, 0.5), rgba(255, 245, 230, 0.5)),
+                    url("../assets/hero-portfolio.png");
+}
+.about-hero {
+  background-image: linear-gradient(rgba(255, 245, 230, 0.5), rgba(255, 245, 230, 0.5)),
+                    url("../assets/hero-about.png");
+}
+.page-hero h1 {
+  font-weight: 700;
+}
+.blog-post-hero h1 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+  word-break: break-word;
+}
+.blog-post-hero h5 {
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+.blog-post-hero .meta {
+  font-size: 0.9rem;
+  color: #6c584c;
+}
+
+/* Stil för innehåll i inlägg */
+.post-content {
+  position: relative;
+}
+
+/* Bildstil */
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #e9c9a3;
+  position: relative;
+}
+
+/* Förhindra sidbrytning och centrera ensamma bilder inuti block */
+  .post-content p:has(img:only-child),
+  .post-content div:has(img:only-child) {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    text-align: center;
+    margin: 2rem auto;
+  }
+
+  .post-content p:has(img:only-child) img,
+  .post-content div:has(img:only-child) img {
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    height: auto;
+  }
+
+/* Behåll bra läsbarhet */
+.post-content p {
+  margin-bottom: 1.2rem;
+  line-height: 1.7;
+}
+
+.post-content h2, .post-content h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #4e2a3e;
+}
+
+/* Fotoetikett i hörnet */
+.post-content figure {
+  position: relative;
+  margin: 2rem auto;
+  max-width: 100%;
+  text-align: center;
+}
+
+.post-content figure img {
+  margin-bottom: 0.5rem;
+}
+
+.post-content figcaption {
+  font-size: 0.9rem;
+  color: #7c5c44;
+  background-color: rgba(255, 245, 230, 0.8);
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.4rem;
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+}
+/* ── Text ───────────────────────────────────── */
+.text-accent {
+  color: #aa7749;
+}
+
+/* ── Formulär ───────────────────────────────────── */
+.contact-card {
+  background-color: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+}
+.form-control {
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+}
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.1rem var(--focus-shadow);
+}
+
+/* ── Sektioner & Layout ───────────────────────── */
+.section-wrapper {
+  background-color: #ebe6de;
+  border-radius: .5rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.content {
+  white-space: pre-line;
+}
+html {
+  scroll-padding-top: 4rem;
+}
+
+/* ── Färger ───────────────────────────────────── */
+.bg-light-pink { background-color: var(--bg-soft) !important; }
+.bg-dark-purple { background-color: #4e2a3e; }
+.bg-orange { background-color: #f47c2c; }
+.blue { color: blue; }
+.coffee { color: #6f4e37; }
+.red { color: red; }
+
+/* ── Ikoner ───────────────────────────────────── */
+.icon-sm { font-size: 1.2rem; }
+.icon-medium { font-size: 1.6rem; }
+.icon-lg { font-size: 2rem; }
+
+/* ── Animeringar ─────────────────────────────── */
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 1s ease forwards;
+}
+.animate-fade-in[style*="animation-delay"] {
+  animation-delay: inherit;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+.scroll-down {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  text-decoration: none;
+}
+
+/* ── Paginering ─────────────────────────────── */
+.custom-pagination .page-link {
+  background-color: var(--bs-light);
+  color: var(--bs-dark);
+  border: 1px solid var(--bs-secondary);
+  border-radius: 0.5rem;
+  margin: 0 4px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.custom-pagination .page-link:hover,
+.custom-pagination .page-item.active .page-link {
+  background-color: var(--bs-secondary);
+  color: white;
+  border-color: var(--bs-secondary);
+}
+.custom-pagination .page-item.disabled .page-link {
+  background-color: #f1f1f1;
+  color: #bbb;
+  pointer-events: none;
+  border-color: #ddd;
+}
+
+/* ── Sticky & Hover ───────────────────────────── */
+.sticky-menu {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+  z-index: 100;
+}
+.hover-effect {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-effect:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Print Anpassningar ───────────────────────── */
+@media print {
+  @page {
+    margin: 0.5cm;
+  }
+
+  body {
+    font-size: 12px !important;
+    line-height: 1.4;
+    margin: 0 !important;
+  }
+
+/* ── Knappar ───────────────────────── */
+  .btn,
+  .sticky-menu,
+  .text-end,
+  nav,
+  footer {
+    display: none !important;
+  }
+
+/* ── Columns ───────────────────────── */
+  .col-md-4 {
+    display: none !important;
+  }
+
+/* ── Cards ───────────────────────── */
+  .card {
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 1px !important;
+  }
+
+/* ── Headers ───────────────────────── */
+  header {
+    padding: 0.5rem 0 !important;
+  }
+
+  h1 {
+    font-size: 20px !important;
+    margin: 0.5rem 0 !important;
+  }
+
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+img,
+figure,
+.post-content img {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+  /* Hero-sektioner utan bakgrundsbild men med innehåll */
+  .page-hero,
+  .blog-post-hero,
+  .portfolio-hero {
+    background: none !important;
+    color: black !important;
+    padding: 0.5rem 1rem !important;
+    text-align: left !important;
+    display: block !important;
+  }
+
+  .page-hero h1,
+  .portfolio-hero h1 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.2rem;
+  }
+
+  .page-hero p,
+  .portfolio-hero p {
+    font-size: 12px !important;
+    margin: 0;
+  }
+
+  .page-hero .meta,
+  .portfolio-hero .meta {
+    font-style: italic;
+    font-size: 11px !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+
+  .comments-section:empty {
+    display: none !important;
+  }
+
+  /* Justera utseende på kommentarer vid utskrift */
+  .comment-card {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0.5rem 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .comment-card h6 {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+    color: #000;
+  }
+
+  .comment-card p {
+    font-size: 0.9rem;
+    color: #000;
+    margin-bottom: 0.5rem;
+  }
+}

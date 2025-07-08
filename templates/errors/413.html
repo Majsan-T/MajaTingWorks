@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Åtkomst Nekad{% endblock %}
+{% block content %}
+<div class="container text-center py-5">
+    <h1 class="display-4">Oops! Filen är för stor.</h1>
+    <img src="{{ url_for('static', filename='assets/img/413.jpg') }}" alt="Bild som visar åtkomst nekad" style="width: 75%; height: auto;">
+    <p class="lead">Tyvärr kunde vi inte ladda upp din fil eftersom den överskrider vår maximala storleksgräns.</p>
+    <p class="mb-4">Den maximala tillåtna filstorleken är {{ config['MAX_CONTENT_LENGTH'] / 1024 / 1024 }} MB.</p>
+    <p>Vänligen försök igen med en mindre fil.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">Tillbaka till startsidan</a>
+    <a href="javascript:history.back()" class="btn btn-secondary mt-3 ms-2">Gå tillbaka</a>
+</div>
+{% endblock %}

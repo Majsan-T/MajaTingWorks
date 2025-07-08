@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Hantera portfolio-inlägg</h2>
+  <a href="{{ url_for('portfolio.create_portfolio') }}" class="btn btn-primary mb-4">➕ Lägg till nytt</a>
+
+  <div class="row">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100">
+        <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}"
+             class="card-img-top" style="height: 200px; object-fit: cover;" alt="Bild">
+        <div class="card-body">
+          <h5 class="card-title">{{ post.title }}</h5>
+          <p class="card-text small">{{ post.description[:100] }}{% if post.description|length > 100 %}...{% endif %}</p>
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('portfolio.edit_portfolio', item_id=post.id) }}" class="btn btn-sm btn-outline-secondary">Redigera</a>
+            <form method="POST" action="{{ url_for('portfolio.delete_portfolio', item_id=post.id) }}">
+              {{ delete_form.hidden_tag() }}
+              <button type="submit" class="btn btn-sm btn-outline-danger"
+                      onclick="return confirm('Är du säker på att du vill radera detta inlägg?')">
+                Radera
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginering -->
+  {% if total_pages > 1 %}
+  <nav aria-label="Sidor">
+    <ul class="pagination justify-content-center">
+      {% for i in range(1, total_pages + 1) %}
+        <li class="page-item {% if page == i %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('portfolio.manage-items', page=i) }}">{{ i }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

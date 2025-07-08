@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h2 class="text-danger">⛔ CSRF-fel</h2>
+    <p>{{ reason }}</p>
+    <p>Försök att ladda om sidan och skicka formuläret igen.</p>
+    <a href="{{ request.referrer or url_for('blog.index') }}" class="btn btn-primary mt-3">Tillbaka</a>
+</div>
+{% endblock %}

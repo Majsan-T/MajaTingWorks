@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1><i class="bi bi-chat-dots"></i> Hantera kommentarer</h1>
+    <!-- Tillbaka-knapp -->
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary mb-4">
+        <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+    </a>
+    <form method="GET" class="d-flex flex-wrap align-items-center gap-2 mb-4">
+        <!-- Sökformulär -->
+    </form>
+
+    {% if comments %}
+    <form method="POST" action="{{ url_for('admin.handle_comment_actions') }}">
+        {{ delete_form.hidden_tag() }}
+        <div class="table-responsive mt-3">
+            <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm mt-2" onclick="return confirm('Radera markerade kommentarer?')">
+                🗑️ Radera markerade
+            </button>
+
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>Författare</th>
+                        <th>Förhandsgranskning</th>
+                        <th>Inlägg</th>
+                        <th>Datum</th>
+                        <th>Kommentar</th>
+                        <th>Åtgärder</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for comment in comments %}
+                <tr>
+                    <td><input type="checkbox" name="selected_comments" value="{{ comment.id }}"></td>
+                    <td>{{ comment.comment_author.name }}</td>
+                    <td>{{ comment.text[:80] }}{% if comment.text|length > 80 %}...{% endif %}</td>
+                    <td>
+                        <a href="{{ url_for('blog.show_post', post_id=comment.parent_post.id) }}">
+                            {{ comment.parent_post.title[:50] }}{% if comment.parent_post.title|length > 50 %}...{% endif %}
+                        </a>
+                    </td>
+                    <td>
+                        {% if comment.date_created %}
+                            {{ comment.date_created.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            <span class="text-muted">Saknas</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if comment.flagged %}
+                            <span class="badge bg-warning text-dark">Flaggad</span>
+                        {% else %}
+                            <span class="badge bg-success">OK</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button type="submit" name="action" value="approve_{{ comment.id }}" class="btn btn-success btn-sm">Godkänn</button>
+
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ comment.id }}">
+                            <i class="bi bi-pencil-fill"></i> Redigera
+                        </button>
+
+                        <button type="submit" name="action" value="flag_{{ comment.id }}" class="btn btn-outline-warning btn-sm">🚩 Flagga</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+    {% else %}
+    <p>Inga kommentarer hittades.</p>
+    {% endif %}
+
+    {% for comment in comments %}
+    <div class="modal fade" id="editModal{{ comment.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ comment.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('admin.edit_comment', comment_id=comment.id) }}">
+                    {{ edit_forms[comment.id].hidden_tag() }}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel{{ comment.id }}">Redigera kommentar</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea name="text" class="form-control" rows="5">{{ comment.text }}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">💾 Spara ändringar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <script>
+        document.getElementById("select-all").addEventListener("click", function () {
+            const checkboxes = document.querySelectorAll("input[name='selected_comments']");
+            for (let checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
+        });
+    </script>
+
+</div>
+{% endblock %}

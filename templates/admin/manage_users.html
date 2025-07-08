@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Hantera användare{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Hantera användare</h2>
+
+    <!-- Tillbaka-knapp -->
+<div class="mb-4">
+  <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-block">
+      <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+  </a>
+</div>
+
+<!-- Sökformulär -->
+<form method="GET" class="row g-2 align-items-center mb-4">
+    <div class="col-auto">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="Sök namn eller email..." value="{{ search }}">
+    </div>
+    <div class="col-auto">
+        <select name="sort" class="form-select form-select-sm">
+            <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Namn A–Ö</option>
+            <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Namn Ö–A</option>
+            <option value="role_user" {% if sort_by == "role_user" %}selected{% endif %}>Endast User</option>
+            <option value="role_admin" {% if sort_by == "role_admin" %}selected{% endif %}>Endast Admin</option>
+            <option value="role_subscriber" {% if sort_by == "role_subscriber" %}selected{% endif %}>Endast Prenumerant</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary">Filtrera</button>
+    </div>
+</form>
+
+{% if users %}
+<form method="POST" action="{{ url_for('admin.delete_selected_users') }}">
+    {{ delete_form.hidden_tag() }}
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all"></th>
+                <th>ID</th>
+                <th>Namn</th>
+                <th>E-post</th>
+                <th>Roll</th>
+                <th>Mailnotis</th>
+                <th>Uppdatera</th>
+                <th>Radera</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td><input type="checkbox" name="selected_users" value="{{ user.id }}"></td>
+                <td>{{ user.id }}</td>
+
+                <form method="POST" action="{{ url_for('admin.update_users') }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="update_id" value="{{ user.id }}">
+                    <td><input type="text" name="users[{{ user.id }}][name]" class="form-control form-control-sm" value="{{ user.name }}"></td>
+                    <td><input type="email" name="users[{{ user.id }}][email]" class="form-control form-control-sm" value="{{ user.email }}"></td>
+                    <td>
+                        <select name="users[{{ user.id }}][role]" class="form-select form-select-sm">
+                            <option value="user" {% if user.role == "user" %}selected{% endif %}>User</option>
+                            <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
+                            <option value="subscriber" {% if user.role == "subscriber" %}selected{% endif %}>Prenumerant</option>
+                        </select>
+                    </td>
+                    <td>{% if user.role == 'subscriber' %}<i class="bi bi-envelope-paper text-success"></i>{% else %}-{% endif %}</td>
+                    <td>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bi bi-save"></i> Spara
+                        </button>
+                    </td>
+                </form>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" onsubmit="return confirm('Vill du ta bort denna användare?');">
+                        {{ delete_form.hidden_tag() }}
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i> Ta bort
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mt-3 ms-2">
+        <i class="bi bi-person-plus"></i> Skapa ny användare
+    </a>
+    <button type="submit" class="btn btn-danger mt-3" onclick="return confirm('Vill du radera markerade användare?')">
+        <i class="bi bi-trash"></i> Radera markerade
+    </button>
+</form>
+
+<!-- Pagination -->
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Paginering">
+    <ul class="pagination justify-content-center mt-4">
+        {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.manage_users', page=pagination.prev_num, search=search, sort=sort_by) }}">Föregående</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Föregående</span></li>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_users', page=page_num, search=search, sort=sort_by) }}">{{ page_num }}</a></li>
+                {% endif %}
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.manage_users', page=pagination.next_num, search=search, sort=sort_by) }}">Nästa</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Nästa</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info text-center">Inga användare hittades.</div>
+{% endif %}
+
+<script>
+    document.getElementById('select-all').addEventListener('change', function () {
+        document.querySelectorAll('input[name="selected_users"]').forEach(cb => cb.checked = this.checked);
+    });
+</script>
+{% endblock %}

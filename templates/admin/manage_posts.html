@@ -1,0 +1,156 @@
+# templates/admin/manage_posts.html
+{% extends "base.html" %}
+{% block title %}Hantera inlägg{% endblock %}
+{% block content %}
+
+<h2>Hantera inlägg</h2>
+<!-- Tillbaka-knapp -->
+<div class="mb-4">
+  <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-block">
+      <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+  </a>
+</div>
+<!-- Nytt inlägg -->
+<div class="mb-3 text-end">
+    <a href="{{ url_for('blog.new_post') }}" class="btn btn-success btn-sm">
+        <i class="bi bi-plus me-1"></i> Nytt inlägg
+    </a>
+    <a href="{{ url_for('admin.cleanup_unused_images') }}"
+       class="btn btn-success btn-sm"
+       onclick="return confirm('Är du säker på att du vill rensa bort oanvända bilder?')">
+       🧹 Rensa oanvända bilder
+    </a>
+</div>
+
+<!-- Sökformulär -->
+<form method="GET" class="row gy-2 gx-2 align-items-center mb-4">
+  <div class="col-auto">
+    <input type="text" name="search" class="form-control form-control-sm" placeholder="Sök titel..." value="{{ search }}">
+  </div>
+  <div class="col-auto">
+    <select name="category" class="form-select form-select-sm">
+      <option value="">Alla kategorier</option>
+      {% for category in categories %}
+        <option value="{{ category.id }}" {% if category.id|string == selected_category|string %}selected{% endif %}>
+          {{ category.title }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select form-select-sm">
+      <option value="">Alla statusar</option>
+      <option value="published" {% if selected_status == "published" %}selected{% endif %}>Publicerade</option>
+      <option value="draft" {% if selected_status == "draft" %}selected{% endif %}>Utkast</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="sort" class="form-select form-select-sm">
+      <option value="date_desc" {% if sort_by == "date_desc" %}selected{% endif %}>Nyast först</option>
+      <option value="date_asc" {% if sort_by == "date_asc" %}selected{% endif %}>Äldst först</option>
+      <option value="title_asc" {% if sort_by == "title_asc" %}selected{% endif %}>Titel A–Ö</option>
+      <option value="title_desc" {% if sort_by == "title_desc" %}selected{% endif %}>Titel Ö–A</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-sm btn-primary">
+      <i class="bi bi-funnel me-1"></i> Filtrera
+    </button>
+  </div>
+</form>
+<!-- Inläggstabell -->
+{% if posts %}
+<form method="POST" action="{{ url_for('admin.bulk_delete_posts') }}">
+  {{ delete_form.hidden_tag() }}
+
+  <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm mb-2" onclick="return confirm('Radera markerade inlägg?')">
+    <i class="bi bi-trash-fill me-1"></i> Radera markerade
+  </button>
+
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="select-all"></th>
+          <th><i class="bi bi-hash"></i></th>
+          <th><i class="bi bi-type"></i> Titel</th>
+          <th><i class="bi bi-calendar"></i> Datum</th>
+          <th><i class="bi bi-folder"></i> Kategori</th>
+          <th><i class="bi bi-pencil-square"></i></th>
+          <th><i class="bi bi-trash"></i></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td><input type="checkbox" name="selected_items" value="{{ post.id }}"></td>
+          <td>{{ post.id }}</td>
+          <td>{{ post.title }}</td>
+          <td>{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else 'Ej angivet' }}</td>
+          <td>{{ post.category_obj.title if post.category_obj else '–' }}</td>
+          <td>
+            <a href="{{ url_for('blog.edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('blog.delete_post', post_id=post.id) }}" style="display:inline;">
+              {{ delete_form.csrf_token }}
+              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Radera detta inlägg?');">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+
+{% else %}
+<div class="alert alert-info text-center">Inga inlägg hittades.</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav aria-label="Paginering">
+    <ul class="pagination justify-content-center mt-4">
+        {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.manage_posts', page=pagination.prev_num, search=search, category=selected_category, sort=sort_by) }}">Föregående</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Föregående</span></li>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_posts', page=page_num, search=search, category=selected_category, sort=sort_by) }}">{{ page_num }}</a></li>
+                {% endif %}
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.manage_posts', page=pagination.next_num, search=search, category=selected_category, sort=sort_by) }}">Nästa</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Nästa</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
+<script>
+  document.getElementById("select-all").addEventListener("click", function () {
+      const checkboxes = document.querySelectorAll("input[name='selected_items']");
+      checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+  });
+</script>

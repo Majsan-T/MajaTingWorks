@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Välkommen - Maria Tingvall{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero position-relative text-white"
+         style="background: url('{{ url_for('static', filename='assets/hero-bg.png') }}') center/cover no-repeat; max-height: 500px; height: 90vh; overflow: hidden;">
+
+  <!-- Text och knappar -->
+  <div class="container position-relative z-2 text-center d-flex flex-column align-items-center justify-content-center h-100">
+    <h1 class="display-3 fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.6);">
+      Maria Tingvall
+    </h1>
+    <p class="lead mt-3" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">
+      Barnmorska & IT-konsult
+    </p>
+
+    <div class="mt-4 d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{{ url_for('portfolio.index') }}" class="index-btn index-btn-primary">
+        <i class="bi bi-folder-fill" style="font-size: 1.5rem;"></i>
+        Se min portfolio
+      </a>
+      <a href="{{ url_for('pages.contact') }}" class="index-btn index-btn-secondary">
+        <i class="bi bi-send-fill" style="font-size: 1.5rem;"></i>
+        Kontakta mig
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section id="main-content" class="py-5" style="background-color: #fdf6ec;">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Portfolio -->
+      <div class="col-md-4">
+        <a href="{{ url_for('portfolio.index') }}" class="text-decoration-none text-dark">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="bi bi-briefcase text-accent mb-3" style="font-size: 2rem;"></i>
+              <h5 class="card-title">Portfolio</h5>
+              <p class="card-text text-muted">Utforska projekt inom vård och IT där jag bidragit med min expertis.</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Blogg -->
+      <div class="col-md-4">
+        <a href="{{ url_for('blog.index') }}" class="text-decoration-none text-dark">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="bi bi-pencil-square text-accent mb-3" style="font-size: 2rem;"></i>
+              <h5 class="card-title">Blogg</h5>
+              <p class="card-text text-muted">Läs mina tankar om teknik, utveckling och livserfarenheter.</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Om mig -->
+      <div class="col-md-4">
+        <a href="{{ url_for('pages.about') }}" class="text-decoration-none text-dark">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="bi bi-person text-accent mb-3" style="font-size: 2rem;"></i>
+              <h5 class="card-title">Om mig</h5>
+              <p class="card-text text-muted">Få en inblick i min resa från barnmorska till techvärlden.</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

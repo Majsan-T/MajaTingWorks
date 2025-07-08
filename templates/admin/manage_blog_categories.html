@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Hantera bloggkategorier{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4">Hantera bloggkategorier</h1>
+  <!-- Tillbaka-knapp -->
+  <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary mb-4">
+    <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+  </a>
+  <form method="POST" enctype="multipart/form-data" class="mb-5">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      <label for="name">Intern namn (URL)</label>
+      {{ form.name(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      <label for="title">Visningsnamn</label>
+      {{ form.title(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      <label for="description">Beskrivning</label>
+      {{ form.description(class="form-control", rows=3) }}
+    </div>
+
+    <div class="mb-3">
+      <label for="image">Kategori-bild</label>
+      {{ form.image(class="form-control") }}
+
+      {% if editing and editing.image %}
+        <div class="mt-3">
+          <label>Nuvarande bild:</label><br>
+          <img src="{{ url_for('static', filename=editing.image) }}" alt="Nuvarande bild" class="img-thumbnail" style="max-width: 200px;">
+          <div class="form-check mt-2">
+            {{ form.delete_image(class="form-check-input") }}
+            <label class="form-check-label" for="delete_image">Ta bort bild</label>
+          </div>
+          <div class="form-check">
+            {{ form.replace_image(class="form-check-input") }}
+            <label class="form-check-label" for="replace_image">Ersätt bild</label>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> Spara kategori
+    </button>
+  </form>
+
+  <hr>
+
+  <h4>Befintliga kategorier</h4>
+  <ul class="list-group">
+    {% for category in categories %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          {% if category.image %}
+            <img src="{{ url_for('static', filename=category.image if category.image else 'assets/img/default_blog_category.webp') }}"
+             onerror="this.src='{{ url_for('static', filename='assets/img/default_blog_category.webp') }}';"
+             alt="Kategori-bild för bloggen"
+             class="img-thumbnail me-2"
+             style="max-width: 100px;">
+          {% endif %}
+          <div>
+            <strong>{{ category.title }}</strong>
+            <small class="text-muted">({{ category.name }})</small>
+            <p class="mb-0">{{ category.description or '' }}</p>
+          </div>
+        </div>
+        <div class="btn-group">
+          <a href="{{ url_for('admin.manage_blog_categories', edit_id=category.id) }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-pencil-square"></i> Redigera
+          </a>
+          <a href="{{ url_for('admin.manage_blog_categories', delete_id=category.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Radera denna kategori?')">
+            <i class="bi bi-trash"></i> Radera
+          </a>
+        </div>
+      </li>
+    {% else %}
+      <li class="list-group-item">Inga kategorier har skapats ännu.</li>
+    {% endfor %}
+  </ul>
+  <div class="mt-4">
+   <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">
+     <i class="bi bi-arrow-left"></i> Tillbaka till adminpanelen
+   </a>
+  </div>
+</div>
+
+{% endblock %}

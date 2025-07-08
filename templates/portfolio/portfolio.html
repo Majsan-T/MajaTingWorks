@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Portfolio{% endblock %}
+
+{% block content %}
+{% set bg_class = "portfolio-hero" %}
+{% set title = "Portfolio" %}
+{% set subtitle = "Här kan du se några av mina projekt." %}
+{% include "partials/_hero.html" %}
+{% block hero_buttons %}
+  {% if current_user.is_authenticated and current_user.role == 'admin' %}
+    <a href="{{ url_for('portfolio.create_portfolio') }}" class="btn btn-primary btn-sm mt-3">
+      Skapa nytt portfolio-inlägg
+    </a>
+  {% endif %}
+{% endblock %}
+<div>
+  <div class="row">
+    <!-- Utforska efter kategori -->
+    <div class="col-lg-8">
+      <h5 class="text-center mb-3">Utforska efter kategori</h5>
+      <div class="row">
+        {% set seen = [] %}
+        {% for category in category_list %}
+          {% if category.id not in seen %}
+            {% set _ = seen.append(category.id) %}
+            <div class="col-md-6 col-lg-6 mb-4">
+              <div class="card section-wrapper h-100 shadow-sm">
+                <a href="{{ url_for('portfolio.category_view', category=category.name) }}"
+                   class="text-decoration-none text-dark">
+                  {% set fallback = 'assets/img/default_portfolio_category.webp' %}
+                  <img
+                    src="{{ url_for('static', filename=category.image if category.image and category.image.strip() else fallback) }}"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename=fallback) }}';"
+                    class="card-img-top object-fit-cover"
+                    style="height:200px"
+                    alt="{{ category.title }}"
+                  >
+                  <div class="card-body text-center">
+                    <h6 class="card-title">{{ category.title }}</h6>
+                  </div>
+                </a>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Höger kolumn: Senaste projekt + navigering -->
+    <div class="col-lg-4">
+      <h5 class="mb-3">Senaste projekt</h5>
+      <div class="section-wrapper mb-4">
+        <div class="d-flex flex-column gap-3">
+          {% for post in posts %}
+            <div class="card shadow-sm">
+              <div class="row g-0">
+                <div class="col-4">
+                  {% set fallback = 'assets/img/default_portfolio.webp' %}
+                  <img
+                    src="{{ url_for('static', filename='uploads/portfolio/' ~ post.image) if post.image and post.image.strip() else url_for('static', filename=fallback) }}"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename=fallback) }}';"
+                    class="object-fit-cover w-100"
+                    style="height:100px"
+                    alt="Thumbnail"
+                  >
+                </div>
+                <div class="col-8">
+                  <div class="card-body p-2">
+                    <a
+                      href="{{ url_for('portfolio.item', item_id=post.id) }}"
+                      class="text-decoration-none text-dark"
+                    >
+                      <h6 class="card-title mb-1">
+                        {{ post.title[:50] }}{% if post.title|length>50 %}…{% endif %}
+                      </h6>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if total_pages > 1 %}
+      <nav aria-label="Sidor">
+        <ul class="pagination justify-content-center mt-3">
+          <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('portfolio.index', page=page-1, sort=sort_order, category_id=current_category, search=search) }}"
+            ><i class="bi bi-chevron-left"></i></a>
+          </li>
+          {% for i in range(1, total_pages + 1) %}
+            <li class="page-item {% if page == i %}active{% endif %}">
+              <a
+                class="page-link"
+                href="{{ url_for('portfolio.index', page=i, sort=sort_order, category_id=current_category, search=search) }}"
+              >{{ i }}</a>
+            </li>
+          {% endfor %}
+          <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('portfolio.index', page=page+1, sort=sort_order, category_id=current_category, search=search) }}"
+            ><i class="bi bi-chevron-right"></i></a>
+          </li>
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

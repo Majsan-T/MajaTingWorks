@@ -1,0 +1,14 @@
+# 500.html
+
+{% extends "base.html" %}
+
+{% block title %}Serverfel{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+    <h1 class="display-4">500 - Något gick fel</h1>
+    <p class="lead">Vi ber om ursäkt, något gick fel på vår sida.</p>
+    <img src="{{ url_for('static', filename='assets/img/505.png') }}" alt="Bild som visar att något gått fel" style="width: 75%; height: auto;">
+    <a href="{{ url_for('pages.home') }}" class="btn btn-primary mt-4">Försök igen senare</a>
+</div>
+{% endblock %}

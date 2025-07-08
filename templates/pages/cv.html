@@ -1,0 +1,139 @@
+<!-- templates/pages/cv.html -->
+
+{% extends "base.html" %}
+{% block title %}Min CV{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<header class="py-2 brown-bg">
+    <div class="container text-center">
+        <h1 class="fs-2 fw-bold my-2">Curriculum vitae</h1>
+    </div>
+</header>
+
+<!-- CV Content -->
+<section class="container my-1">
+    <div class="row g-4 py-5">
+        <!-- Sticky Menu -->
+        <div class="col-lg-3 order-last order-lg-first sticky-menu brown-bg text-black rounded shadow p-4">
+            <div class="text-center mb-4">
+                <img src="{{ url_for('static', filename='assets/img/profile.jpg') }}" alt="Profilbild" class="img-fluid rounded-circle shadow" style="width: 150px; border: 3px solid #8b5e3c;">
+            </div>
+            <h5 class="text-center">OM MIG</h5>
+            <nav class="nav flex-column text-center gap-2">
+                <a href="#experience" class="btn btn-primary btn-sm"><i class="bi bi-briefcase me-1"></i>Erfarenhet</a>
+                <a href="#education" class="btn btn-primary btn-sm"><i class="bi bi-mortarboard me-1"></i>Utbildning</a>
+                <a href="#awards" class="btn btn-primary btn-sm"><i class="bi bi-award me-1"></i>Certifieringar</a>
+                <a href="#skills" class="btn btn-primary btn-sm"><i class="bi bi-book me-1"></i>Kunskaper</a>
+                <a href="#interests" class="btn btn-primary btn-sm"><i class="bi bi-flower1 me-1"></i>Intressen</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9 order-first order-lg-last">
+            <form method="POST">
+              {{ form.hidden_tag() }}
+
+              {% for section, label, icon in [
+                ('about', 'Om mig', 'bi-person-circle'),
+                ('experience', 'Erfarenhet', 'bi-briefcase'),
+                ('education', 'Utbildning', 'bi-mortarboard'),
+                ('awards', 'Certifieringar', 'bi-award'),
+                ('skills', 'Kunskaper', 'bi-book'),
+                ('interests', 'Intressen', 'bi-flower1')
+              ] %}
+              <div id="{{ section }}" class="card bg-light-pink mb-4 animate-fade hover-effect">
+                <div class="card-body">
+                    <h3 class="subheading"><i class="bi {{ icon }} me-2"></i>{{ label }}</h3>
+
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                      <input type="hidden" id="input-{{ section }}" name="{{ section }}" value="{{ content[section]|e }}">
+                      <div class="form-control mb-2 p-0">
+                        <div id="editor-{{ section }}" style="height: 200px;"></div>
+                      </div>
+                    {% else %}
+                      <div class="post-content mb-2">{{ content[section]|safe }}</div>
+                    {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+
+              {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <div class="text-end mb-4">
+                    {{ form.submit(class="btn btn-success") }}
+                </div>
+              {% endif %}
+            </form>
+
+            {% if current_user.is_authenticated and current_user.role == 'admin' %}
+            <script>
+              document.addEventListener("DOMContentLoaded", function () {
+                const sections = ['about', 'experience', 'education', 'awards', 'skills', 'interests'];
+                const quills = {};
+
+                sections.forEach(function (section) {
+                  const editor = new Quill('#editor-' + section, {
+                    theme: 'snow',
+                    placeholder: 'Skriv här...',
+                    modules: {
+                      toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'bullet' }],
+                        ['link'],
+                        ['code'],
+                        ['clean']
+                      ]
+                    }
+                  });
+
+                  const hidden = document.getElementById('input-' + section);
+                  if (hidden && hidden.value) {
+                    // Skapa ett temporärt DOM-element
+                    const tempDiv = document.createElement('div');
+
+                    // Sätt det *escapade* innehållet från hidden.value som innerHTML
+                    // Detta kommer att få webbläsaren att avkoda HTML-entiteterna (&quot;, &amp;amp; etc.)
+                    tempDiv.innerHTML = hidden.value;
+
+                    // NU är det kritiska steget:
+                    // Använd tempDiv.innerHTML igen. Detta kommer att ge dig den avkodade HTML-strängen
+                    // med de riktiga citationstecknen och ampersand-tecknen, OCH bevara HTML-strukturen.
+                    // Till exempel: <a href="https://...">curious & innovative</a>
+                    const decodedAndPreservedHtml = tempDiv.innerHTML;
+
+                    // Klistra in den avkodade HTML-strukturen i Quill
+                    editor.clipboard.dangerouslyPasteHTML(decodedAndPreservedHtml);
+                  }
+
+                  quills[section] = editor;
+                });
+
+                const form = document.querySelector('form');
+                if (form) {
+                  form.addEventListener('submit', function () {
+                    sections.forEach(function (section) {
+                      const hidden = document.getElementById('input-' + section);
+                      if (hidden && quills[section]) {
+                        hidden.value = quills[section].root.innerHTML;
+                      }
+                    });
+                  });
+                }
+              });
+            </script>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<div class="text-end mt-1 mb-4">
+    <a href="#top" class="btn btn-secondary btn-sm">Till toppen ↑</a>
+</div>
+
+<div class="text-center mb-5">
+    <button onclick="window.print()" class="btn btn-primary btn-sm">
+        <i class="bi bi-print me-1"></i>Skriv ut / Spara som PDF
+    </button>
+</div>
+
+{% endblock %}

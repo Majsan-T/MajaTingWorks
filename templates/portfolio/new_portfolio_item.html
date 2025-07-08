@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block styles %}
+  {{ super() }}
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Skapa inlägg{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mt-4">Skapa ett nytt portfolioinlägg</h1>
+  <form method="POST" enctype="multipart/form-data" id="portfolioForm">
+    {{ form.csrf_token }}
+
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.category.label(class="form-label") }}
+      {{ form.category(class="form-select") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.image.label(class="form-label") }}
+      {{ form.image(class="form-control") }}
+    </div>
+
+    <!-- Quill Editor + HiddenField som INTE är WTForms-fält -->
+    <div class="mb-3">
+      <label for="editor-container" class="form-label">Beskrivning</label>
+      <input type="hidden" name="description" id="hiddenInput">
+      <div id="editor-container" class="quill-editor bg-white p-2"
+        data-input="#hiddenInput"
+        data-upload="/portfolio/upload"
+        style="height: 300px;"></div>
+    </div>
+
+    <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3 mt-3 mb-4">
+      {{ form.submit.label.text }}
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("🧪 new_portfolio_item.html: Quill initieras...");
+
+      const editorContainer = document.getElementById("editor-container");
+      const form = document.getElementById("portfolioForm");
+      const hiddenInput = document.getElementById("hiddenInput");
+
+      const quill = new Quill(editorContainer, {
+        theme: "snow",
+        modules: {
+          toolbar: {
+            container: [
+              ["bold", "italic", "underline"],
+              ["link", "image", "code-block"]
+            ],
+            handlers: {
+              image: function () {
+                const input = document.createElement("input");
+                input.setAttribute("type", "file");
+                input.setAttribute("accept", "image/*");
+                input.click();
+
+                input.onchange = async () => {
+                  const file = input.files[0];
+                  const formData = new FormData();
+                  formData.append("image", file);
+
+                  try {
+                    const res = await fetch("/blog/upload", {
+                      method: "POST",
+                      body: formData
+                    });
+                    const data = await res.json();
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, "image", data.url);
+                  } catch (err) {
+                    console.error("🚨 Fel vid bilduppladdning:", err);
+                  }
+                };
+              }
+            }
+          }
+        }
+      });
+
+      form.addEventListener("submit", function () {
+        hiddenInput.value = quill.root.innerHTML;
+        console.log("✅ hiddenInput.value satt till:", hiddenInput.value);
+      });
+    });
+  </script>
+{% endblock %}

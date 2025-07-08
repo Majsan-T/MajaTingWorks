@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Portfolio, blogg, CV: barnmorska och IT-konsult" />
+    <meta name="author" content="Maria Tingvall" />
+    <title>{% block title %}Maria Tingvall{% endblock %}</title>
+
+    {% block styles %}
+      {{ bootstrap.load_css() }}
+      <!-- Bootstrap Icons -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/united/bootstrap.min.css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+      <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='assets/favicon.ico') }}" />
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+      <!-- Quill CSS -->
+      <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    {% endblock %}
+  </head>
+  <body>
+    <!-- Flash-meddelanden -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container mt-4">
+          {% for category, message in messages %}
+            {% set icon = {
+              'success': 'check-circle-fill',
+              'info':    'info-circle',
+              'warning': 'exclamation-triangle-fill',
+              'danger':  'x-circle-fill'
+            }[category] %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center" role="alert">
+              <i class="bi bi-{{ icon }} me-2"></i>
+              <div>{{ message }}</div>
+              <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% include "header.html" %}
+
+    <div class="container mt-5">
+      <div class="card shadow-sm p-4 rounded-4">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+
+    {% include "footer.html" %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <!-- Block för sidunika scripts -->
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

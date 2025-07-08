@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+instance/
+*.sqlite3
+
+# Flask-Migrate
+migrations/__pycache__/
+migrations/versions/*.pyc
+
+# IDE-filer
+.vscode/
+.idea/
+
+# OS-filer
+.DS_Store
+Thumbs.db
+
+# Loggar och tillfälliga filer
+*.log
+*.bak
+
+# Dokumentation
+/docs/
+Flask-Migrate-Guide.txt
+Flask-Migrate-Rollback.txt
