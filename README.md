@@ -186,7 +186,8 @@ python tools/inspect_models.py
 ## 🗒️ To-do
 
 1. Unsubscribe as user / subscriber
-2. Localize
+2. Date- / time-handling needs some adjustments for posted_at and updated_at
+3. Localize
 
 ---
 
