@@ -1,6 +1,7 @@
 # MajaTingWorks 🌟
 
 A professional portfolio, blog, and CV site built with Flask and MySQL — now GitHub Pages–friendly!
+Swedish frontend, localization to-do.
 
 ---
 
@@ -215,6 +216,14 @@ python tools/inspect_models.py
 3. Commit your changes: `git commit -m 'Add some feature'`
 4. Push to the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
+
+---
+
+## 🗒️ To-do
+
+1. Unsubscribe as user / subscriber
+2. Date- / time-handling needs some adjustments for posted_at and updated_at
+3. Localize
 
 ---
 
