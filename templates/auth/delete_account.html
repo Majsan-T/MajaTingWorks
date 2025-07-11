@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Ta bort ditt konto</h2>
+  <p>Detta går inte att ångra. Alla dina uppgifter raderas.</p>
+  <form method="POST">
+    <button type="submit" class="btn btn-danger">Ja, ta bort mitt konto</button>
+    <a href="{{ url_for('pages.index') }}" class="btn btn-secondary">Avbryt</a>
+  </form>
+</div>
+{% endblock %}

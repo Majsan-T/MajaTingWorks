@@ -20,6 +20,8 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="user")  # 👈 Lägg till denna rad
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
+    is_deleted = db.Column(db.Boolean, default=False)
+    deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"

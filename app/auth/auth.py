@@ -1,13 +1,14 @@
 # app/auth/auth.py
 from itsdangerous import URLSafeTimedSerializer as Serializer, SignatureExpired, BadSignature
 from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db, login_manager, mail
 from app.forms import RegisterForm, LoginForm, RequestResetForm, ResetPasswordForm
 from app.forms.auth_forms import SetPasswordForm
-from app.models import User
+from app.models import User, Comment
+from datetime import datetime
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -137,3 +138,27 @@ def set_password(token):
         return redirect(url_for("auth.login"))
 
     return render_template("auth/set_password.html", form=form)
+
+@auth_bp.route("/delete_account", methods=["GET", "POST"])
+@login_required
+def delete_account():
+    if request.method == "POST":
+        user = current_user
+
+        # Logga ut först
+        logout_user()
+
+        # Anonymisera
+        user.email = f"deleted_{user.id}@example.com"
+        user.name = "Raderad användare"
+        user.is_deleted = True
+        user.deleted_at = datetime.utcnow()
+
+        # Radera användarspecifika kommentarer etc om du vill
+        Comment.query.filter_by(user_id=user.id).delete()
+
+        db.session.commit()
+        flash("Ditt konto har raderats enligt GDPR.", "info")
+        return redirect(url_for("pages.index"))
+
+    return render_template("auth/delete_account.html")
