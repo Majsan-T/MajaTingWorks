@@ -126,6 +126,42 @@ Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
 - **GitHub Pages–friendly** layout
 
 ---
+
+## 🚜 CLI-kommandon
+
+### ✉️ `send-blog-mails`
+
+Skickar e-postnotifieringar till prenumeranter när ett blogginläggs `created_at` har passerat och det inte redan har skickats. Nyttiga för schemalagda eller framtidsdaterade inlägg.
+
+#### ✅ Användning:
+
+```bash
+flask send-blog-mails
+```
+
+> Kommandot markerar varje inlägg som "skickat" genom att sätta `email_sent = True`.
+
+---
+
+## 📆 Cron-jobb
+
+Vill du skicka mejl automatiskt varje dag? Lägg till följande rad i din crontab för att köra kommandot varje kväll kl. 21:
+
+```cron
+0 21 * * * cd /home/your/path/to/root-folder && FLASK_APP=main.py FLASK_CLI=true flask send-blog-mails >> logs/send_blog_mails.log 2>&1
+```
+
+📌 **Förutsätter att:**
+
+- Flask CLI fungerar korrekt i din miljö.
+- Du har en katalog `logs/` i projektroten.
+- Flask kan hitta miljövariabler via `.env` eller serverinställningar.
+
+> Använd `crontab -e` för att redigera din crontab.  
+> För att spara i `vim`, tryck `Esc`, skriv `:wq` och tryck Enter.
+
+---
+
 ## Development Tools
 ### 🧹 Clean the project (Windows only)
 
@@ -161,7 +197,7 @@ A helpful script that generates documentation and guide files for common Flask t
 python tools/generate_docs.py
 ```
 
-### 🧩 `tools/inspect_models.py`
+### 🤩 `tools/inspect_models.py`
 
 A developer utility that prints an overview of your SQLAlchemy models: all database tables and their columns. Useful for verifying schema structure or troubleshooting migrations.
 

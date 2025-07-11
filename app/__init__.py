@@ -3,18 +3,22 @@ import os
 import logging
 import click
 from datetime import datetime, timezone
+from config import DevelopmentConfig, ProductionConfig
 
 from flask import Flask, render_template, current_app, request
 from flask_bootstrap import Bootstrap5
 from flask_babel import Babel, format_datetime, gettext as _, ngettext
 from flask_wtf.csrf import CSRFError
 from werkzeug.security import generate_password_hash
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.extensions import db, login_manager, mail, csrf, migrate, babel
 from app.utils.filters import nl2br, format_datetime_sv
 from app.utils.helpers import strip_and_truncate, linebreaks
 from app.models import User, BlogPost, BlogCategory, Comment, PortfolioItem, Category
-from app.cli import fix_post_timestamps, reset_bad_updated_at
+from app.cli import fix_post_timestamps, reset_bad_updated_at, register_cli_commands
+from app.blog.scheduler import check_and_notify_posts
+from app.blog.utils import check_and_send_blog_emails
 
 # 📁 Hitta basmapp för statisk och mallar
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -27,10 +31,11 @@ def create_app():
         static_folder=os.path.join(base_dir, '..', 'static'),
         template_folder=os.path.join(base_dir, '..', 'templates')
     )
-    # Ladda config från config.py
-    from config import Config
-    app.config.from_object(Config)
-    app.config.setdefault("ENV", os.getenv("FLASK_ENV", "production"))
+
+    if os.getenv("FLASK_ENV") == "development":
+        app.config.from_object(DevelopmentConfig)
+    else:
+        app.config.from_object(ProductionConfig)
 
     # 🔧 Initiera extensions
     db.init_app(app)
@@ -40,16 +45,19 @@ def create_app():
     mail.init_app(app)
     csrf.init_app(app)
     Bootstrap5(app)
+    register_cli_commands(app)
 
     # 🔗 Registrera Blueprints
     from app.admin.admin import admin_bp
-    from app.blog.blog import blog_bp
     from app.auth.auth import auth_bp
+    from app.blog.blog import blog_bp
+    from app.blog.cli import send_blog_mails
     from app.pages.pages import pages_bp
     from app.portfolio.portfolio import portfolio_bp
 
     app.cli.add_command(fix_post_timestamps)
     app.cli.add_command(reset_bad_updated_at)
+    app.cli.add_command(send_blog_mails)
 
     app.register_blueprint(blog_bp, url_prefix='/blog')
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -62,6 +70,10 @@ def create_app():
     app.jinja_env.filters['linebreaks'] = linebreaks
     app.jinja_env.filters['nl2br'] = nl2br
     app.jinja_env.filters['format_datetime_sv'] = format_datetime_sv
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=check_and_notify_posts, trigger="interval", minutes=30)
+    scheduler.start()
 
     # 📆 Global variabel "year" till alla templates
     @app.context_processor
@@ -135,7 +147,8 @@ def create_app():
         return render_template('errors/500.html'), 500
     # ============================
     
-    if app.config["ENV"] == "development":
+    # Endast i utvecklingsmiljö
+    if app.config.get("FLASK_ENV") == "development":
         @app.cli.command("db-reset")
         def reset_db():
             """Rensar databasen och skapar alla tabeller på nytt."""
@@ -148,13 +161,20 @@ def create_app():
 
                 # Skapa admin-användare
                 admin = User(
-                    email = os.getenv("DEFAULT_ADMIN_EMAIL", "admin@example.com"),
-                    password= generate_password_hash(os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123")),
+                    email=os.getenv("DEFAULT_ADMIN_EMAIL", "admin@example.com"),
+                    password=generate_password_hash(os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123")),
                     name="Maria",
                     role="admin"
                 )
                 db.session.add(admin)
                 db.session.commit()
                 click.echo("👤 Admin-användare skapad: admin@example.com / admin")
+
+    from app.blog.cli import send_blog_mails
+    app.cli.add_command(send_blog_mails)
+
+    # Stoppa schemaläggaren vid app shutdown
+    import atexit
+    atexit.register(lambda: scheduler.shutdown(wait=False))
 
     return app

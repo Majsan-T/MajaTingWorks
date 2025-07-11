@@ -3,10 +3,9 @@ import os
 from flask import Blueprint, render_template, redirect, url_for, current_app, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from flask_mail import Message
-from app import mail
 from app.blog.utils import notify_subscribers
 from app.decorators import admin_only
-from app.extensions import db, csrf
+from app.extensions import db, csrf, mail
 from app.forms import BlogPostForm, CommentForm, DeleteForm, CategorySelectForm, CategoryFilterForm, BlogCategoryForm
 from app.models import BlogPost, Comment, User, BlogCategory
 from app.utils.time import get_local_now, DEFAULT_TZ

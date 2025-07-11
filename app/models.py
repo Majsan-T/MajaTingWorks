@@ -21,7 +21,6 @@ class User(UserMixin, db.Model):
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
-
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = Column(Integer, primary_key=True)
@@ -36,7 +35,8 @@ class BlogPost(db.Model):
     author_id = Column(Integer, ForeignKey("users.id"))
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="parent_post", cascade="all, delete-orphan")
-    
+    email_sent = Column(Boolean, default=False)
+
 class BlogCategory(db.Model):
     __tablename__ = 'blog_categories'
     id = db.Column(db.Integer, primary_key=True)
@@ -73,7 +73,6 @@ class Category(db.Model):
     image = db.Column(db.String(100), nullable=True)  # Genrebild för kategorin
 
     items = db.relationship('PortfolioItem', back_populates='category_obj', lazy=True)
-
 
 class PortfolioItem(db.Model):
     __tablename__ = 'portfolio_items'

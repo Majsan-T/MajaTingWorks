@@ -110,9 +110,9 @@ def manage_users():
     elif sort_by == "role_admin":
         query = query.filter_by(role="admin")
     elif sort_by == "role_user":
-        query = query.filter_by(role="user")
+        query = query.filter_by(role="användare")
     elif sort_by == "role_subscriber":
-        query = query.filter_by(role="subscriber")
+        query = query.filter_by(role="prenumerant")
 
     pagination = query.paginate(page=page, per_page=10)
     return render_template("admin/manage_users.html", users=pagination.items, pagination=pagination,

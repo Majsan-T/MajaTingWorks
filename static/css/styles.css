@@ -65,6 +65,10 @@
   background-color: var(--accent-hover);
   border-color: var(--accent-hover);
 }
+/* Förhindra att <img> visas i knappar */
+.btn img {
+  display: none;
+}
 
 /* ── Knappar specifika för startsidan/index ── */
 .index-btn {
