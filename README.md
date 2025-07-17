@@ -98,14 +98,14 @@ Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ## 🧪 Usage Overview
 
-| Route               | Description                    |
-|--------------------|--------------------------------|
-| `/blog/`           | View blog posts                |
-| `/blog/new_post`   | Create new post (admin only)   |
-| `/blog/post/<id>`  | View specific post             |
-| `/cv`              | CV section                     |
-| `/portfolio`       | Portfolio section              |
-| `/admin/`          | Admin panel                    |
+| Route              | Description                  |
+|--------------------|------------------------------|
+| `/blog/`           | View blog posts              |
+| `/blog/new_post`   | Create new post (admin only) |
+| `/blog/post/<id>`  | View specific post           |
+| `/cv`              | CV section                   |
+| `/portfolio`       | Portfolio section            |
+| `/admin/`          | Admin panel                  |
 
 ---
 
@@ -254,7 +254,7 @@ python tools/inspect_models.py
 ## 🗒️ To-do
 
 1. Unsubscribe as user/subscriber – Done
-2. Refine date/time handling for `posted_at` and `updated_at`
+2. Refine date/time handling for `posted_at` and `updated_at` – Done
 3. Localization support
 
 ---
