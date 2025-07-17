@@ -4,10 +4,11 @@ import click
 from datetime import timezone
 from app.models import BlogPost
 from app.extensions import db
-from app.blog.cli import send_blog_mails
+# from app.blog.cli import send_blog_mails
 
 def register_cli_commands(app):
-    app.cli.add_command(send_blog_mails)
+    # app.cli.add_command(send_blog_mails)
+    pass
 
 @click.command("fix-post-timestamps")
 @with_appcontext

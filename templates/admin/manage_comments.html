@@ -38,8 +38,8 @@
                     <td>{{ comment.comment_author.name }}</td>
                     <td>{{ comment.text[:80] }}{% if comment.text|length > 80 %}...{% endif %}</td>
                     <td>
-                        <a href="{{ url_for('blog.show_post', post_id=comment.parent_post.id) }}">
-                            {{ comment.parent_post.title[:50] }}{% if comment.parent_post.title|length > 50 %}...{% endif %}
+                        <a href="{{ url_for('blog.show_post', post_id=comment.post.id) }}">
+                            {{ comment.post.title[:50] }}{% if comment.post.title|length > 50 %}...{% endif %}
                         </a>
                     </td>
                     <td>

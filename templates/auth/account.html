@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 700px;">
+    <h2 class="mb-4 text-center">Mitt konto</h2>
+
+    <!-- Konto-information -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>Namn:</strong> {{ user.name }}</p>
+            <p><strong>E-post:</strong> {{ user.email }}</p>
+            <p><strong>Roll:</strong> {{ user.role }}</p>
+        </div>
+    </div>
+
+    <!-- Kommentarer -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>Mina kommentarer</strong>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for comment in comments %}
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1">{{ comment.text }}</p>
+                    <small class="text-muted">
+                        Kommentar till <a href="{{ url_for('blog.show_post', post_id=comment.post.id) }}">
+                            {{ comment.post.title }}
+                        </a> – skrivet {{ comment.date_created.strftime("%Y-%m-%d %H:%M") }}
+                    </small>
+                </div>
+                <form method="POST" action="{{ url_for('auth.delete_comment', comment_id=comment.id) }}">
+                    {{ delete_form.hidden_tag() }}
+                    <button type="submit" class="btn btn-sm btn-outline-danger ms-2">Ta bort</button>
+                </form>
+            </li>
+            {% else %}
+            <li class="list-group-item text-muted">Inga kommentarer än.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- GDPR-information -->
+    <div class="alert alert-info mb-4">
+        <h5><i class="bi bi-shield-lock me-1"></i> GDPR & Kontohantering</h5>
+        <ul class="mb-0">
+            <li><strong>Inaktivera konto:</strong> Ditt konto anonymiseras. Historik (t.ex. kommentarer) behålls men kopplas inte längre till dig.</li>
+            <li><strong>Radera konto permanent:</strong> All personlig information och historik raderas och kan inte återställas.</li>
+            <li><strong>Återaktivera konto:</strong> Endast möjligt om du tidigare inaktiverat det. Ditt konto och historik återställs.</li>
+        </ul>
+    </div>
+
+    <!-- GDPR-knappar -->
+    <div class="d-flex justify-content-between">
+        {% if not user.is_deleted %}
+        <form method="POST" action="{{ url_for('auth.deactivate_account') }}">
+            {{ delete_form.hidden_tag() }}
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-person-dash"></i> Inaktivera konto
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('auth.delete_account') }}">
+            {{ delete_form.hidden_tag() }}
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Radera konto permanent
+            </button>
+        </form>
+        {% else %}
+        <form method="POST" action="{{ url_for('auth.reactivate_account') }}">
+            {{ delete_form.hidden_tag() }}
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-arrow-repeat"></i> Återaktivera konto
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

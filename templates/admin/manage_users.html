@@ -23,6 +23,7 @@
             <option value="role_user" {% if sort_by == "role_user" %}selected{% endif %}>Endast User</option>
             <option value="role_admin" {% if sort_by == "role_admin" %}selected{% endif %}>Endast Admin</option>
             <option value="role_subscriber" {% if sort_by == "role_subscriber" %}selected{% endif %}>Endast Prenumerant</option>
+            <option value="inactive" {% if sort_by == "inactive" %}selected{% endif %}>Endast Inaktiva</option> <!-- ✅ NYTT -->
         </select>
     </div>
     <div class="col-auto">
@@ -34,6 +35,7 @@
 <form method="POST" action="{{ url_for('admin.delete_selected_users') }}">
     {{ delete_form.hidden_tag() }}
 
+
     <table class="table table-hover">
         <thead>
             <tr>
@@ -43,13 +45,15 @@
                 <th>E-post</th>
                 <th>Roll</th>
                 <th>Mailnotis</th>
+                <th>Status</th> <!-- ✅ Ny rubrik -->
+                <th>Aktivera/Inaktivera</th> <!-- ✅ Ny rubrik -->
                 <th>Uppdatera</th>
                 <th>Radera</th>
             </tr>
         </thead>
         <tbody>
         {% for user in users %}
-            <tr>
+            <tr class="{% if not user.is_active %}table-secondary{% endif %}">
                 <td><input type="checkbox" name="selected_users" value="{{ user.id }}"></td>
                 <td>{{ user.id }}</td>
 
@@ -66,12 +70,37 @@
                         </select>
                     </td>
                     <td>{% if user.role == 'subscriber' %}<i class="bi bi-envelope-paper text-success"></i>{% else %}-{% endif %}</td>
+
+                    <!-- ✅ Status med ikon -->
+                    <td>
+                        {% if user.is_active %}
+                            <i class="bi bi-check-circle text-success"></i> Aktiv
+                        {% else %}
+                            <i class="bi bi-x-circle text-danger"></i> Inaktiv
+                        {% endif %}
+                    </td>
+
+                    <!-- ✅ Aktivera/Inaktivera-knapp -->
+                    <td>
+                        {% if user.is_deleted %}
+                            <span class="text-muted">Ej möjligt</span>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}">
+                                {{ delete_form.hidden_tag() }}
+                                <button type="submit" class="btn btn-sm btn-{{ 'warning' if user.is_active else 'success' }}">
+                                    {{ "Inaktivera" if user.is_active else "Aktivera" }}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </td>
+
                     <td>
                         <button type="submit" class="btn btn-sm btn-primary">
                             <i class="bi bi-save"></i> Spara
                         </button>
                     </td>
                 </form>
+
                 <td>
                     <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" onsubmit="return confirm('Vill du ta bort denna användare?');">
                         {{ delete_form.hidden_tag() }}

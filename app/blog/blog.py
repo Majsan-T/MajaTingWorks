@@ -146,17 +146,23 @@ def index(page=1):
         delete_form=delete_form
     )
 
-@blog_bp.route("/category_images/<string:category_images>")
-@blog_bp.route("/category_images/<string:category_images>/page/<int:page>")
-def posts_by_category(category, page=1):
-    sort_order = request.args.get('sort', 'desc')  # Default till 'desc' = nyast först
+@blog_bp.route("/category/<slug>")
+@blog_bp.route("/category/<slug>/page/<int:page>")
+def posts_by_category(slug, page=1):
+    category = BlogCategory.query.filter_by(slug=slug).first_or_404()
+    sort_order = request.args.get('sort', 'desc')  # 'desc' som standard
     query = BlogPost.query.filter_by(category=category)
-    query = query.order_by(BlogPost.created_at.asc() if sort_order == 'oldest' else BlogPost.created_at.desc())
+    query = query.order_by(
+        BlogPost.created_at.asc() if sort_order == 'asc' else BlogPost.created_at.desc()
+    )
 
     total_posts = query.count()
     start = (page - 1) * POSTS_PER_PAGE
     posts = query.slice(start, start + POSTS_PER_PAGE).all()
     total_pages = (total_posts + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+
+    for post in posts:
+        print(f"Post: {post.title} | Category: {post.category} | Slug: {getattr(post.category, 'slug', None)}")
 
     return render_template("blog/layout.html", posts=posts, category=category,
                            page=page, total_pages=total_pages, sort_order=sort_order)
@@ -262,7 +268,7 @@ def show_post(post_id):
         new_comment = Comment(
             text=comment_form.comment_text.data,
             comment_author=current_user,
-            parent_post=post
+            post=post
         )
         db.session.add(new_comment)
         db.session.commit()

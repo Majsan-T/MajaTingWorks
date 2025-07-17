@@ -4,7 +4,8 @@ import bleach
 import pytz
 from bs4 import BeautifulSoup
 from datetime import datetime, date, time
-from flask import current_app
+from flask import current_app, request
+from flask_login import current_user
 from markupsafe import Markup, escape 
 
 DEFAULT_TZ = pytz.timezone("Europe/Stockholm")
@@ -63,3 +64,9 @@ def sanitize_html(html):
 #     # Logik för att skicka e-post, push-notiser etc.
 #     print(f"Noterar prenumeranter om nytt inlägg: {blog_post.title}")
 #     pass
+
+def log_info(message: str):
+    """Loggar info med användarens e-post om inloggad, annars 'Anonymous'."""
+    user_email = current_user.email if current_user.is_authenticated else "Anonymous"
+    ip_address = request.remote_addr or "Unknown IP"
+    current_app.logger.info(f"{message} (User: {user_email}, IP: {ip_address})")

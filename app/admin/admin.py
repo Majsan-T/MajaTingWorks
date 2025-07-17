@@ -7,13 +7,17 @@ from flask_mail import Message
 from sqlalchemy import asc, desc
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
+from app.blog.utils import check_and_send_blog_emails
 from app.decorators import admin_only
 from app.extensions import db, mail
 from app.models import User, BlogPost, Comment, BlogCategory, Category, PortfolioItem
 from app.forms.auth_forms import AdminCreateUserForm
 from app.forms.blog_forms import BlogCategoryForm
-from app.forms.shared_forms import AdminUserForm, UserUpdateForm, CommentForm, DeleteForm, ImageDeleteForm, ApproveForm
+from app.forms.shared_forms import (AdminUserForm, UserUpdateForm, CommentForm, DeleteForm, ImageDeleteForm, ApproveForm,
+                                    EmptyForm)
 from app.forms.portfolio_forms import CategoryForm
+# from app.blog.utils import check_and_send_blog_emails
+from app.utils.helpers import log_info
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from itsdangerous import URLSafeTimedSerializer
@@ -31,10 +35,12 @@ def generate_reset_token(email):
 @login_required
 @admin_only
 def admin_dashboard():
+    log_info("🛠 Adminpanelen laddades")
     user_count = User.query.count()
     post_count = BlogPost.query.count()
     comment_count = Comment.query.count()
     delete_form = DeleteForm()
+    mail_form = EmptyForm()
 
     flagged_comments = Comment.query.filter_by(flagged=True).all()
 
@@ -84,7 +90,9 @@ def admin_dashboard():
         comment_count=comment_count,
         flagged_comments=flagged_comments,
         dashboard_sections=dashboard_sections,
-        delete_form = delete_form
+        delete_form = delete_form,
+        mail_form=mail_form,
+        form=delete_form
     )
 
 # Hantera användare
@@ -103,6 +111,7 @@ def manage_users():
 
     if search:
         query = query.filter((User.name.ilike(f"%{search}%")) | (User.email.ilike(f"%{search}%")))
+
     if sort_by == "name_asc":
         query = query.order_by(User.name.asc())
     elif sort_by == "name_desc":
@@ -110,9 +119,11 @@ def manage_users():
     elif sort_by == "role_admin":
         query = query.filter_by(role="admin")
     elif sort_by == "role_user":
-        query = query.filter_by(role="användare")
+        query = query.filter_by(role="user")
     elif sort_by == "role_subscriber":
-        query = query.filter_by(role="prenumerant")
+        query = query.filter_by(role="subscriber")
+    elif sort_by == "inactive":  # ✅ NYTT FILTER
+        query = query.filter((User.is_deleted == True) | (User._is_active == False))
 
     pagination = query.paginate(page=page, per_page=10)
     return render_template("admin/manage_users.html", users=pagination.items, pagination=pagination,
@@ -166,6 +177,20 @@ def delete_selected_users():
         flash(f"{len(selected_ids)} användare raderades.", "success")
     else:
         flash("Inga användare markerades för radering.", "warning")
+    return redirect(url_for("admin.manage_users"))
+
+@admin_bp.route("/toggle-user/<int:user_id>", methods=["POST"])
+@login_required
+@admin_only
+def toggle_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_deleted:
+        flash("❌ Detta konto är anonymiserat och kan inte aktiveras igen.", "danger")
+        return redirect(url_for("admin.manage_users"))
+
+    user.is_active = not user.is_active
+    db.session.commit()
+    flash(f"✅ Användaren {user.email} är nu {'aktiverad' if user.is_active else 'inaktiverad'}.", "success")
     return redirect(url_for("admin.manage_users"))
 
 @admin_bp.route('/promote/<int:user_id>')
@@ -360,7 +385,7 @@ def manage_comments():
         query = query.filter(
             (Comment.text.ilike(f"%{search}%")) |
             (Comment.comment_author.has(User.name.ilike(f"%{search}%"))) |
-            (Comment.parent_post.has(BlogPost.title.ilike(f"%{search}%")))
+            (Comment.post.has(BlogPost.title.ilike(f"%{search}%")))
         )
 
     if post_filter:
@@ -826,3 +851,15 @@ def bulk_delete_posts():
     else:
         flash("Inga inlägg valda.", "warning")
     return redirect(url_for("admin.manage_posts"))
+
+@admin_bp.route("/send-blog-mails", methods=["POST"])
+@login_required
+@admin_only
+def trigger_blog_mail():
+    try:
+        check_and_send_blog_emails()
+        flash("✅ Bloggmail har skickats (max 10 utskick).", "success")
+    except Exception as e:
+        current_app.logger.error(f"❌ Manuell mailkörning misslyckades: {e}")
+        flash("❌ Ett fel uppstod vid försök att skicka mail.", "danger")
+    return redirect(url_for("admin.admin_dashboard"))

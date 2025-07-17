@@ -22,6 +22,9 @@ class ApproveForm(FlaskForm):
 class UserUpdateForm(FlaskForm):
     pass
 
+class EmptyForm(FlaskForm):
+    pass
+
 class CvEditForm(FlaskForm):
     class Meta:
         csrf = True

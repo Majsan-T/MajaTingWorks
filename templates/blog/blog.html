@@ -34,6 +34,7 @@
         <button type="submit" class="btn btn-primary btn-sm">Sök</button>
         <a href="{{ url_for('blog.index') }}" class="btn btn-secondary btn-sm">Rensa filter</a>
     </form>
+
 </div>
 
 <div class="container">
@@ -48,8 +49,7 @@
                 <div class="card-body flex-grow-1 d-flex flex-column">
                     {% if post.category %}
                       <span class="badge bg-secondary mb-2">
-                        <a href="{{ url_for('blog.index', category=post.category.name, sort=sort_order, search=request.args.get('search', '')) }}"
-                           class="text-decoration-none text-white">{{ post.category.title }}</a>
+                        <a href="{{ url_for('blog.posts_by_category', slug=post.category.slug, sort=sort_order, search=request.args.get('search', '')) }}">{{ post.category.title }}</a>
                       </span>
                     {% endif %}
                     <h5 class="card-title brown-text"><a href="{{ url_for('blog.show_post', post_id=post.id) }}" class="text-decoration-none text-reset">{{ post.title }}</a></h5>

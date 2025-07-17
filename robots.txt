@@ -1,0 +1,19 @@
+# Allow all robots to access everything...
+User-agent: *
+
+# ...except admin and login pages
+Disallow: /admin/
+Disallow: /login
+Disallow: /logout
+Disallow: /register
+Disallow: /create
+Disallow: /edit
+Disallow: /delete
+
+# Disallow internal tools or test folders (if applicable)
+Disallow: /tools/
+Disallow: /tests/
+Disallow: /migrations/
+
+# Sitemap (optional – lägg till om du har en)
+Sitemap: https://your-domain.com/sitemap.xml

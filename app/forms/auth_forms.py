@@ -60,3 +60,6 @@ class ResetPasswordForm(FlaskForm):
         validators=[DataRequired(), EqualTo("password", message="Lösenorden måste matcha.")]
     )
     submit   = SubmitField("Återställ lösenord")
+
+class DeleteForm(FlaskForm):
+    submit = SubmitField("Ta bort")

@@ -18,6 +18,11 @@
   </form>
 
   <p class="mt-3">
-    <a href="{{ url_for('auth.request_reset') }}">Glömt lösenordet?</a>
+    <a href="{{ url_for('auth.request_reset') }}">Glömt lösenordet?</a> Klicka på länken och skapa ett nytt lösenord.
+  </p>
+
+  <p class="mt-3">
+    <a href="{{ url_for('auth.register') }}">Inget konto?</a> Skapa ett konto om du vill kommentera något jag skrivit.
   </p>
 {% endblock %}
+

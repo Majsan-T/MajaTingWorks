@@ -8,42 +8,59 @@
 
   <!-- Översiktspanel med genvägar och statistik -->
   <div class="row mb-4">
+    <!-- Användare -->
     <div class="col-md-4">
-      <div class="card text-bg-primary mb-3" style="background-image: url('{{ url_for('static', filename='assets/img/admin-card-bg.png') }}'); background-size: cover; background-position: center;">
-        <div class="card-body">
+      <div class="card h-100 shadow-sm rounded-4 text-bg-danger">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title"><i class="bi bi-people"></i> Användare</h5>
           <p class="card-text display-6 fw-bold">{{ user_count }}</p>
-          <a href="{{ url_for('admin.create_user') }}" class="btn btn-outline-light btn-sm mt-2">
-            <i class="bi bi-person-fill-add"></i> Lägg till användare
-          </a>
-          <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-light btn-sm mt-2">
-            <i class="bi bi-person-fill-gear"></i> Hantera användare
-          </a>
+          <div class="mt-auto">
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-outline-light btn-sm me-2 mb-2">
+              <i class="bi bi-person-fill-add"></i> Lägg till användare
+            </a>
+            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-person-fill-gear"></i> Hantera användare
+            </a>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Inlägg -->
     <div class="col-md-4">
-      <div class="card text-bg-success mb-3" style="background-image: url('{{ url_for('static', filename='assets/img/admin-card-bg.png') }}'); background-size: cover; background-position: center;">
-        <div class="card-body">
+      <div class="card h-100 shadow-sm rounded-4 text-bg-success">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title"><i class="bi bi-journal"></i> Inlägg</h5>
           <p class="card-text display-6 fw-bold">{{ post_count }}</p>
-          <a href="{{ url_for('blog.new_post') }}" class="btn btn-outline-light btn-sm mt-2">
-            <i class="bi bi-plus"></i> Skapa nytt inlägg
-          </a>
-          <a href="{{ url_for('admin.manage_posts') }}" class="btn btn-outline-light btn-sm mt-2">
-            <i class="bi bi-journal"></i> Hantera blogginlägg
-          </a>
+          <div class="mt-auto">
+            <a href="{{ url_for('blog.new_post') }}" class="btn btn-outline-light btn-sm me-2 mb-2">
+              <i class="bi bi-plus"></i> Skapa nytt inlägg
+            </a>
+            <a href="{{ url_for('admin.manage_posts') }}" class="btn btn-outline-light btn-sm mb-2">
+              <i class="bi bi-journal"></i> Hantera blogginlägg
+            </a>
+            <form action="{{ url_for('admin.trigger_blog_mail') }}" method="POST" class="d-inline">
+              {{ mail_form.hidden_tag() }}
+              <button type="submit" class="btn btn-outline-light btn-sm mb-2">
+                <i class="bi bi-envelope-fill"></i> Skicka väntande blogmail nu
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Kommentarer -->
     <div class="col-md-4">
-      <div class="card text-bg-warning mb-3" style="background-image: url('{{ url_for('static', filename='assets/img/admin-card-bg.png') }}'); background-size: cover; background-position: center;">
-        <div class="card-body">
+      <div class="card h-100 shadow-sm rounded-4 text-bg-warning">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title"><i class="bi bi-chat-left-text"></i> Kommentarer</h5>
           <p class="card-text display-6 fw-bold">{{ comment_count }}</p>
-          <a href="{{ url_for('admin.manage_comments') }}" class="btn btn-outline-dark btn-sm mt-2">
-            <i class="bi bi-chat-dots"></i> Hantera kommentarer
-          </a>
+          <div class="mt-auto">
+            <a href="{{ url_for('admin.manage_comments') }}" class="btn btn-outline-dark btn-sm">
+              <i class="bi bi-chat-dots"></i> Hantera kommentarer
+            </a>
+          </div>
         </div>
       </div>
     </div>

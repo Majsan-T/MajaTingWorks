@@ -1,17 +1,17 @@
 # app/pages/pages.py
 from datetime import datetime
-from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app
-from app.forms import ContactForm
+from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app, Response
 from flask_mail import Message
-from app.extensions import mail  # importera mail-objektet
 from flask_login import login_required, current_user
-from app.extensions import db
-from app.models import CVContent
+from app.extensions import mail, db
+from app.forms import ContactForm
 from app.forms.shared_forms import CvEditForm
-from app.models import BlogPost  # Glöm inte importera modellen!
+from app.models import CVContent, BlogPost, PortfolioItem, Category
+from app.utils.helpers import log_info
 import requests
 
 pages_bp = Blueprint("pages", __name__)
+
 
 def verify_captchafox(response_token):
     secret = current_app.config["CAPTCHAFOX_SECRET_KEY"]
@@ -27,8 +27,10 @@ def verify_captchafox(response_token):
         return False
     return data.get("success", False)
 
+
 @pages_bp.route('/')
 def home():
+    log_info("🛠 Adminpanelen laddades")
     year = datetime.now().year
     print(f"App root path: {current_app.root_path}")
     return render_template('index.html', year=year)
@@ -41,10 +43,13 @@ def test():
 
 @pages_bp.route("/about")
 def about():
+    log_info("🛠 Adminpanelen laddades")
     return render_template("pages/about.html")
+
 
 @pages_bp.route("/contact", methods=["GET", "POST"])
 def contact():
+    current_app.logger.info(f"Route /admin/ kördes av {current_user.email}")
     form = ContactForm()
     site_key = current_app.config.get("CAPTCHAFOX_SITE_KEY")
 
@@ -71,8 +76,10 @@ def contact():
 
     return render_template("pages/contact.html", form=form, captcha_sitekey=site_key)
 
+
 @pages_bp.route("/cv", methods=["GET", "POST"])
 def cv():
+    current_app.logger.info(f"Route /admin/ kördes av {current_user.email}")
     form = CvEditForm()
 
     # Se till att det alltid finns ett CVContent-objekt
@@ -125,3 +132,72 @@ def cv():
         "skills": content.skills or "",
         "interests": content.interests or "",
     })
+
+
+@pages_bp.route("/sitemap.xml")
+def sitemap():
+    pages = []
+    today = datetime.utcnow().date().isoformat()
+
+    # Statiska sidor
+    static_routes = [
+        ("pages.home", {}),
+        ("pages.about", {}),
+        ("pages.contact", {}),
+        ("pages.cv", {}),
+        ("portfolio.index", {}),
+        ("blog.index", {})
+    ]
+    for endpoint, values in static_routes:
+        pages.append({
+            "loc": url_for(endpoint, _external=True, **values),
+            "lastmod": today
+        })
+
+    # Blogginlägg
+    blog_posts = BlogPost.query.all()
+    for post in blog_posts:
+        lastmod = post.updated_at.date().isoformat() if post.updated_at else post.created_at.date().isoformat()
+        pages.append({
+            "loc": url_for("blog.show_post", post_id=post.id, _external=True),
+            "lastmod": lastmod
+        })
+
+    # Bloggkategorier
+    blog_categories = BlogCategory.query.all()
+    for cat in blog_categories:
+        pages.append({
+            "loc": url_for("blog.posts_by_category", category=cat.name, _external=True),
+            "lastmod": today
+        })
+
+    # Portfolio
+    portfolio_items = PortfolioItem.query.all()
+    for item in portfolio_items:
+        pages.append({
+            "loc": url_for("portfolio.item", item_id=item.id, _external=True),
+            "lastmod": item.date.date().isoformat()
+        })
+
+    # Portfoliokategorier
+    portfolio_categories = Category.query.all()
+    for cat in portfolio_categories:
+        pages.append({
+            "loc": url_for("portfolio.category_view", category=cat.name, _external=True),
+            "lastmod": today
+        })
+
+    sitemap_xml = render_sitemap(pages)
+    return Response(sitemap_xml, mimetype="application/xml")
+
+
+def render_sitemap(pages):
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for page in pages:
+        xml.append("  <url>")
+        xml.append(f"    <loc>{page['loc']}</loc>")
+        xml.append(f"    <lastmod>{page['lastmod']}</lastmod>")
+        xml.append("  </url>")
+    xml.append("</urlset>")
+    return "\n".join(xml)

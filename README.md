@@ -1,20 +1,19 @@
 # MajaTingWorks 🌟
 
 A professional portfolio, blog, and CV site built with Flask and MySQL — now GitHub Pages–friendly!
-Swedish frontend, localization to-do.
 
 ---
 
 ## 🚀 Features
 
-- **Blog** – create, edit, and publish posts using the Quill rich text editor.
-- **Comments** – authenticated users can leave comments.
-- **Portfolio & CV** – showcase your projects, skills, and experience.
-- **User Roles & Auth** – admin, user, subscriber roles using Flask-Login.
-- **CaptchaFox** – protect contact form with bot prevention.
-- **Image Conversion** – auto converts uploads to WebP via Pillow.
-- **Email Notifications** – notify subscribers of new posts.
-- **MySQL + Migrations** – powered by Flask-Migrate.
+- **Blog** – Create, edit, and publish posts using the Quill rich text editor.
+- **Comments** – Authenticated users can leave comments.
+- **Portfolio & CV** – Showcase your projects, skills, and experience.
+- **User Roles & Auth** – Admin, user, subscriber roles using Flask-Login.
+- **CaptchaFox** – Protect the contact form with bot prevention.
+- **Image Conversion** – Automatically converts uploaded images to WebP using Pillow.
+- **Email Notifications** – Notifies subscribers when a new blog post is published.
+- **MySQL + Migrations** – Powered by Flask-Migrate.
 
 ---
 
@@ -54,7 +53,7 @@ MajaTingWorks/
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate     # macOS/Linux
-.venv\Scripts\activate      # Windows
+.venv\Scripts\activate        # Windows
 ```
 
 ### 📦 Install Dependencies
@@ -65,7 +64,7 @@ pip install -r requirements.txt
 
 ### 🔐 Configure Environment Variables
 
-Create a `.env` file in your root directory:
+Create a `.env` file in your project root:
 
 ```ini
 DATABASE_URL=mysql+pymysql://<user>:<password>@<host>:3306/<dbname>
@@ -128,54 +127,97 @@ Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ---
 
-## 🚜 CLI-kommandon
+## ✉️ Mailutskick & GDPR-anpassad Kontohantering
+
+### 🔐 GDPR & Anonymisering av konton
+
+- **Anonymisering:**  
+  När en användare raderas eller ett konto inaktiveras permanent anonymiseras det enligt GDPR.  
+  - Originalmailen ersätts med en dummyadress:  
+    `deleted_user_<id>@example.com`  
+  - Namn ersätts med `"Raderad användare"`.  
+  - Fältet `is_deleted=True` sätts och `is_active` låses till `False`.  
+  - Alla blogginlägg och kommentarer kopplade till kontot anonymiseras eller raderas beroende på systeminställningar.
+
+- **Ej återställbart:**  
+  Anonymisering är **permanent** – användaren kan inte återaktiveras eftersom originaladressen är borta.
+
+- **Adminpanel:**  
+  Admins kan se anonymiserade konton markerade med en grå rad och texten *Inaktiv* i användarlistan.  
+  En "Aktivera"-knapp visas **inte** för anonymiserade konton.
+
+- **Dummy-domäner:**  
+  Dummyadresser använder reserverade domäner (`example.com`) enligt [RFC 2606](https://datatracker.ietf.org/doc/html/rfc2606), vilket gör dem säkra och ej routade.
+
+---
+
+### ✉️ Mailutskick & Hantering av prenumeranter
+
+- **Notifieringar:**  
+  - Prenumeranter får automatiska mail när nya blogginlägg publiceras.  
+  - Utskicket sker via kommandot `flask send-blog-mails` eller automatiskt via cron-jobb.
+
+- **Inaktiverade konton & mail:**  
+  - Systemet skickar **aldrig** mail till konton där `is_active=False` eller e-postadressen slutar på:  
+    - `example.com`  
+    - `example.net`  
+    - `example.org`  
+    - `invalid`  
+  - En intern funktion (`is_dummy_email()`) blockerar alla utskick till anonymiserade konton.
+
+- **Avsluta prenumeration:**  
+  Prenumeranter kan själva avregistrera sig via länk i e-postutskick.  
+  Admin kan också inaktivera prenumeranter via adminpanelen.
+
+---
+
+## 🚜 CLI Commands
 
 ### ✉️ `send-blog-mails`
 
-Skickar e-postnotifieringar till prenumeranter när ett blogginläggs `created_at` har passerat och det inte redan har skickats. Nyttiga för schemalagda eller framtidsdaterade inlägg.
+Sends email notifications to subscribers when a blog post's `created_at` timestamp has passed and the post hasn't been emailed yet.
 
-#### ✅ Användning:
+#### ✅ Usage:
 
 ```bash
 flask send-blog-mails
 ```
 
-> Kommandot markerar varje inlägg som "skickat" genom att sätta `email_sent = True`.
+> Each post is marked as sent by setting `email_sent = True`.
 
 ---
 
-## 📆 Cron-jobb
+## 📆 Cron Jobs
 
-Vill du skicka mejl automatiskt varje dag? Lägg till följande rad i din crontab för att köra kommandot varje kväll kl. 21:
+Want to send blog emails automatically every day? Add the following to your crontab to run the command at 9:00 PM daily:
 
 ```cron
 0 21 * * * cd /home/your/path/to/root-folder && FLASK_APP=main.py FLASK_CLI=true flask send-blog-mails >> logs/send_blog_mails.log 2>&1
 ```
 
-📌 **Förutsätter att:**
+📌 **Prerequisites:**
 
-- Flask CLI fungerar korrekt i din miljö.
-- Du har en katalog `logs/` i projektroten.
-- Flask kan hitta miljövariabler via `.env` eller serverinställningar.
+- Flask CLI must work in your environment.
+- A `logs/` directory should exist in the project root.
+- Environment variables must be accessible via `.env` or system config.
 
-> Använd `crontab -e` för att redigera din crontab.  
-> För att spara i `vim`, tryck `Esc`, skriv `:wq` och tryck Enter.
+> Edit your crontab with `crontab -e`.  
+> In `vim`, press `Esc`, type `:wq`, then press Enter to save and exit.
 
 ---
 
 ## Development Tools
-### 🧹 Clean the project (Windows only)
 
-The `tools/clean-project.ps1` script removes temporary files, for example:
+### 🧹 Clean the Project (Windows Only)
+
+The `tools/clean-project.ps1` script removes temporary files such as:
 
 - Python cache files (`*.pyc`, `__pycache__`)
 - Swap/backup files (`*.bak`, `*~`, etc.)
 - Unused `migrations/` folders (without `versions/`)
 - Test or temporary images (`test`, `temp`, `debug` in `static/`)
 
-... and then logs the results in a timestamped log file (e.g. tools/clean_log_2025-07-07_1340.txt)
-
-To run the script (in PowerShell):
+Creates a timestamped log file, e.g., `tools/clean_log_2025-07-07_1340.txt`
 
 ```powershell
 ./tools/clean-project.ps1
@@ -183,26 +225,16 @@ To run the script (in PowerShell):
 
 ### 📄 `tools/generate_docs.py`
 
-A helpful script that generates documentation and guide files for common Flask tasks. It creates a `docs/` directory (if not present) and fills it with `.txt` and optionally `.md` files containing quick reference tips and example code for topics like:
+Generates docs and quick guides for common Flask tasks. Outputs `.txt` and `.md` files to a `docs/` directory.
 
-- CSRF troubleshooting
-- Flask-Mail setup
-- Pagination with SQLAlchemy
-- Image upload handling
-- User management
-- Testing and debugging
-- Deployment best practices
-
-#### ✅ Usage:
 ```bash
 python tools/generate_docs.py
 ```
 
 ### 🤩 `tools/inspect_models.py`
 
-A developer utility that prints an overview of your SQLAlchemy models: all database tables and their columns. Useful for verifying schema structure or troubleshooting migrations.
+Prints all database tables and their columns. Helpful for checking schema consistency and debugging.
 
-#### ✅ Usage
 ```bash
 python tools/inspect_models.py
 ```
@@ -212,18 +244,18 @@ python tools/inspect_models.py
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/your-feature`
+2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature/your-feature`
+4. Push to your branch: `git push origin feature/your-feature`
 5. Open a Pull Request
 
 ---
 
 ## 🗒️ To-do
 
-1. Unsubscribe as user / subscriber
-2. Date- / time-handling needs some adjustments for posted_at and updated_at
-3. Localize
+1. Unsubscribe as user/subscriber – Done
+2. Refine date/time handling for `posted_at` and `updated_at`
+3. Localization support
 
 ---
 

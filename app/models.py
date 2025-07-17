@@ -14,14 +14,42 @@ class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    # is_password_set = db.Column(db.Boolean, default=False)  # 👈 nytt fält
     password = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(1000), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default="user")  # 👈 Lägg till denna rad
-    posts = relationship("BlogPost", back_populates="author")
-    comments = relationship("Comment", back_populates="comment_author")
+    role = db.Column(db.String(20), nullable=False, default="user")
+    _is_active = db.Column("is_active", db.Boolean, default=True)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    is_password_set = db.Column(db.Boolean, default=False)
+
+    posts = db.relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
+    comments = db.relationship("Comment", back_populates="comment_author", cascade="all, delete-orphan")
+
+    @property
+    def is_active(self):
+        return not self.is_deleted and self._is_active
+
+    @is_active.setter
+    def is_active(self, value):
+        self._is_active = value
+
+    def anonymize(self):
+        """Anonymisera användaren enligt GDPR."""
+        self.email = f"anonymized_{self.id}@example.com"
+        self.name = "Raderad användare"
+        self.is_deleted = True
+        self.deleted_at = datetime.now(timezone.utc)
+        self._is_active = False
+
+    def delete_permanently(self):
+        """Radera allt kopplat till användaren."""
+        from app.extensions import db
+        for comment in self.comments:
+            db.session.delete(comment)
+        for post in self.posts:
+            db.session.delete(post)
+        db.session.delete(self)
+
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
@@ -36,7 +64,7 @@ class BlogPost(db.Model):
     category = relationship("BlogCategory", back_populates="posts")
     author_id = Column(Integer, ForeignKey("users.id"))
     author = relationship("User", back_populates="posts")
-    comments = relationship("Comment", back_populates="parent_post", cascade="all, delete-orphan")
+    comments = db.relationship("Comment", back_populates="post", cascade="all, delete-orphan")
     email_sent = Column(Boolean, default=False)
 
 class BlogCategory(db.Model):
@@ -61,7 +89,7 @@ class Comment(db.Model):
     flagged = db.Column(db.Boolean, default=False)
 
     post_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"))
-    parent_post = db.relationship("BlogPost", back_populates="comments")
+    post = db.relationship("BlogPost", back_populates="comments")  # ✅ NYTT NAMN
 
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     comment_author = db.relationship("User")
