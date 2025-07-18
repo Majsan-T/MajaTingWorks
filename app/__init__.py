@@ -14,7 +14,6 @@ from werkzeug.security import generate_password_hash
 from app.extensions import db, login_manager, mail, csrf, migrate, babel
 from app.utils.filters import nl2br, format_datetime_sv
 from app.utils.helpers import strip_and_truncate, linebreaks
-from app.utils.scheduler import init_scheduler
 from app.models import User, BlogPost, BlogCategory, Comment, PortfolioItem, Category
 from app.cli import fix_post_timestamps, reset_bad_updated_at, register_cli_commands
 
@@ -57,13 +56,13 @@ def create_app():
     from app.admin.admin import admin_bp
     from app.auth.routes import auth_bp
     from app.blog.blog import blog_bp
-    #    from app.blog.cli import send_blog_mails
+    from app.blog.cli import send_blog_mails
     from app.pages.pages import pages_bp
     from app.portfolio.portfolio import portfolio_bp
 
     app.cli.add_command(fix_post_timestamps)
     app.cli.add_command(reset_bad_updated_at)
-    #    app.cli.add_command(send_blog_mails)
+    app.cli.add_command(send_blog_mails)
 
     app.register_blueprint(blog_bp, url_prefix='/blog')
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -150,10 +149,5 @@ def create_app():
 
         current_app.logger.error(f"Global 500 Internal Server Error caught: {error}", exc_info=True)
         return render_template('errors/500.html'), 500
-
-    #    from app.blog.cli import send_blog_mails
-    #    app.cli.add_command(send_blog_mails)
-
-    init_scheduler(app)
 
     return app

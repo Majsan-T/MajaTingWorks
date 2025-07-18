@@ -22,11 +22,17 @@
             {% for comment in comments %}
             <li class="list-group-item d-flex justify-content-between align-items-start">
                 <div>
-                    <p class="mb-1">{{ comment.text }}</p>
+                    <p class="mb-1">{{ comment.text|safe }}</p>
                     <small class="text-muted">
-                        Kommentar till <a href="{{ url_for('blog.show_post', post_id=comment.post.id) }}">
-                            {{ comment.post.title }}
-                        </a> – skrivet {{ comment.date_created.strftime("%Y-%m-%d %H:%M") }}
+                        {% if comment.post %}
+                            Kommentar till
+                            <a href="{{ url_for('blog.show_post', post_id=comment.post.id) }}">
+                                {{ comment.post.title }}
+                            </a>
+                        {% else %}
+                            Kommentar till <em>(inlägget är raderat eller otillgängligt)</em>
+                        {% endif %}
+                         – skrivet {{ comment.date_created.strftime("%Y-%m-%d %H:%M") }}
                     </small>
                 </div>
                 <form method="POST" action="{{ url_for('auth.delete_comment', comment_id=comment.id) }}">

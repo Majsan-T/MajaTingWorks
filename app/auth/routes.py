@@ -13,10 +13,12 @@ from app.forms.auth_forms import SetPasswordForm
 
 auth_bp = Blueprint("auth", __name__)
 
+
 # ========= UTILITIES =========
 def generate_token(email):
     s = Serializer(current_app.config["SECRET_KEY"], salt="password-reset")
     return s.dumps({"email": email})
+
 
 def verify_token(token, expiration=3600):
     s = Serializer(current_app.config["SECRET_KEY"], salt="password-reset")
@@ -26,9 +28,11 @@ def verify_token(token, expiration=3600):
         return None
     return data.get("email")
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
 
 # ========= ROUTES =========
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -61,20 +65,25 @@ def login():
         return redirect(url_for("blog.index"))
     return render_template("auth/login.html", form=form)
 
+
 @auth_bp.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for("blog.index"))
 
+
 @auth_bp.route("/account", methods=["GET"])
 @login_required
 def account():
     page = request.args.get("page", 1, type=int)
-    comments = Comment.query.filter_by(author_id=current_user.id)\
-        .order_by(Comment.date_created.desc())\
+    comments = Comment.query.filter_by(author_id=current_user.id) \
+        .order_by(Comment.date_created.desc()) \
         .paginate(page=page, per_page=5)
 
     delete_form = DeleteForm()
+
+    user_comments = [c for c in current_user.comments if c.post is not None]
+
     return render_template(
         "auth/account.html",
         user=current_user,
@@ -158,6 +167,7 @@ Länken går ut om 1 timme."""
         return redirect(url_for("auth.login"))
     return render_template("auth/request_reset.html", form=form)
 
+
 @auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
 def reset_password(token):
     email = verify_token(token)
@@ -172,6 +182,7 @@ def reset_password(token):
         flash("Ditt lösenord är återställt. Du kan nu logga in.", "success")
         return redirect(url_for("auth.login"))
     return render_template("auth/reset_password.html", form=form)
+
 
 @auth_bp.route('/set-password/<token>', methods=['GET', 'POST'])
 def set_password(token):
@@ -189,6 +200,7 @@ def set_password(token):
         flash("Lösenordet är satt. Du kan nu logga in.", "success")
         return redirect(url_for("auth.login"))
     return render_template("auth/set_password.html", form=form)
+
 
 # Ta bort en kommentar
 @auth_bp.route("/delete-comment/<int:comment_id>", methods=["POST"])
