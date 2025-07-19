@@ -5,18 +5,19 @@
     <h2 class="mb-4 text-center">Mitt konto</h2>
 
     <!-- Konto-information -->
-    <div class="card mb-4">
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <p><strong>Namn:</strong> {{ user.name }}</p>
-            <p><strong>E-post:</strong> {{ user.email }}</p>
-            <p><strong>Roll:</strong> {{ user.role }}</p>
+            <h5 class="card-title"><i class="bi bi-person-circle me-1"></i> Kontouppgifter</h5>
+            <p class="mb-1"><strong>Namn:</strong> {{ user.name }}</p>
+            <p class="mb-1"><strong>E-post:</strong> {{ user.email }}</p>
+            <p class="mb-0"><strong>Roll:</strong> {{ user.role }}</p>
         </div>
     </div>
 
     <!-- Kommentarer -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <strong>Mina kommentarer</strong>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <strong><i class="bi bi-chat-left-text me-1"></i> Mina kommentarer</strong>
         </div>
         <ul class="list-group list-group-flush">
             {% for comment in comments %}
@@ -32,12 +33,14 @@
                         {% else %}
                             Kommentar till <em>(inlägget är raderat eller otillgängligt)</em>
                         {% endif %}
-                         – skrivet {{ comment.date_created.strftime("%Y-%m-%d %H:%M") }}
+                        – skrivet {{ comment.date_created.strftime("%Y-%m-%d %H:%M") }}
                     </small>
                 </div>
                 <form method="POST" action="{{ url_for('auth.delete_comment', comment_id=comment.id) }}">
                     {{ delete_form.hidden_tag() }}
-                    <button type="submit" class="btn btn-sm btn-outline-danger ms-2">Ta bort</button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
+                        <i class="bi bi-x-lg"></i> Ta bort
+                    </button>
                 </form>
             </li>
             {% else %}
@@ -47,8 +50,8 @@
     </div>
 
     <!-- GDPR-information -->
-    <div class="alert alert-info mb-4">
-        <h5><i class="bi bi-shield-lock me-1"></i> GDPR & Kontohantering</h5>
+    <div class="alert alert-info shadow-sm mb-4">
+        <h5 class="mb-2"><i class="bi bi-shield-lock me-1"></i> GDPR & Kontohantering</h5>
         <ul class="mb-0">
             <li><strong>Inaktivera konto:</strong> Ditt konto anonymiseras. Historik (t.ex. kommentarer) behålls men kopplas inte längre till dig.</li>
             <li><strong>Radera konto permanent:</strong> All personlig information och historik raderas och kan inte återställas.</li>
@@ -57,7 +60,7 @@
     </div>
 
     <!-- GDPR-knappar -->
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mb-4">
         {% if not user.is_deleted %}
         <form method="POST" action="{{ url_for('auth.deactivate_account') }}">
             {{ delete_form.hidden_tag() }}
@@ -79,6 +82,41 @@
             </button>
         </form>
         {% endif %}
+    </div>
+
+    <!-- Cookies & integritet -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <strong><i class="bi bi-shield-check me-1"></i> Integritet & Cookies</strong>
+        </div>
+        <div class="card-body">
+            <p class="mb-2">Den här webbplatsen lagrar endast tekniskt nödvändiga cookies:</p>
+            <ul>
+                <li><strong>Sessionscookie</strong> (<code>session</code>) – håller dig inloggad och gör att kommentarer och prenumerationer fungerar.</li>
+                <li><strong>CSRF-skydd</strong> – används vid formulär för att förhindra spam (lagras inte som en långvarig cookie utan bara under sessionen).</li>
+                <li class="text-muted">
+                    Andra cookies (t.ex. <code>_ga</code>, <code>_gcl_au</code>) kan finnas kvar från tidigare WordPress-versioner eller din webbleverantör.
+                    Dessa används inte av den här webbplatsen.
+                </li>
+            </ul>
+            <p class="mb-2">
+                Vi använder <strong>inga cookies</strong> för annonsering eller spårning.
+            </p>
+            <p class="mb-0">
+                <strong>GDPR & användardata:</strong><br>
+                Du kan inaktivera eller radera ditt konto när som helst via "Mitt konto". Om du raderar ditt konto anonymiseras eller raderas dina uppgifter permanent.
+            </p>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>Aktiva cookies:</strong></li>
+            {% if cookies %}
+                {% for name, value in cookies.items() %}
+                    <li class="list-group-item"><strong>{{ name }}</strong>: {{ value }}</li>
+                {% endfor %}
+            {% else %}
+                <li class="list-group-item text-muted">Inga cookies lagrade.</li>
+            {% endif %}
+        </ul>
     </div>
 </div>
 {% endblock %}

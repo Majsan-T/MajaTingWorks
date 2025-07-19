@@ -82,13 +82,17 @@ def account():
 
     delete_form = DeleteForm()
 
+    # Hämta cookies dynamiskt
+    cookies = request.cookies
+
     user_comments = [c for c in current_user.comments if c.post is not None]
 
     return render_template(
         "auth/account.html",
         user=current_user,
         comments=comments,
-        delete_form=delete_form
+        delete_form=delete_form,
+        cookies=cookies
     )
 
 
@@ -215,3 +219,4 @@ def delete_comment(comment_id):
     db.session.commit()
     flash("Kommentaren har tagits bort.", "success")
     return redirect(url_for("auth.account"))
+

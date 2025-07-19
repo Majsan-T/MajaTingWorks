@@ -4,7 +4,7 @@
 {% block content %}
 {% set bg_class = "blog-hero" %}
 {% set title = "Blogg" %}
-{% set subtitle = "Här kan du se några av mina projekt." %}
+{% set subtitle = "Här kan du läsa mer om mina projekt." %}
 {% include "partials/_hero.html" %}
 {% block hero_buttons %}
   {% if current_user.is_authenticated and current_user.role == 'admin' %}
