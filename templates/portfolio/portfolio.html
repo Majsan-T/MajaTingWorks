@@ -7,7 +7,7 @@
 {% set subtitle = "Här kan du se några av mina projekt." %}
 {% include "partials/_hero.html" %}
 {% block hero_buttons %}
-  {% if current_user.is_authenticated and current_user.role == 'admin' %}
+  {% if current_user.is_authenticated and current_user.is_authenticated and current_user.has_role('admin') %}
     <a href="{{ url_for('portfolio.create_portfolio') }}" class="btn btn-primary btn-sm mt-3">
       Skapa nytt portfolio-inlägg
     </a>
@@ -67,7 +67,7 @@
                 <div class="col-8">
                   <div class="card-body p-2">
                     <a
-                      href="{{ url_for('portfolio.item', item_id=post.id) }}"
+                      href="{{ url_for('portfolio.show_portfolio_item', item_id=post.id) }}"
                       class="text-decoration-none text-dark"
                     >
                       <h6 class="card-title mb-1">

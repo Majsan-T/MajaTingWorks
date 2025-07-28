@@ -10,7 +10,14 @@
             <h5 class="card-title"><i class="bi bi-person-circle me-1"></i> Kontouppgifter</h5>
             <p class="mb-1"><strong>Namn:</strong> {{ user.name }}</p>
             <p class="mb-1"><strong>E-post:</strong> {{ user.email }}</p>
-            <p class="mb-0"><strong>Roll:</strong> {{ user.role }}</p>
+            <p class="mb-0">
+              <strong>Roller:</strong>
+              {% if user.roles %}
+                {{ user.roles | map(attribute='name') | join(", ") }}
+              {% else %}
+                Inga roller tilldelade
+              {% endif %}
+            </p>
         </div>
     </div>
 

@@ -1,8 +1,12 @@
+<!-- templates/pages/contact.html -->
 {% extends "base.html" %}
-
 {% block title %}Kontakt{% endblock %}
 
 {% block content %}
+
+{# =====================================================
+   ✅ HERO-SEKTION: SIDRUBRIK
+   ===================================================== #}
 <section class="contact-hero page-hero">
   <div class="container">
     <h1>Kontakta mig</h1>
@@ -10,8 +14,17 @@
 </section>
 
 <div class="container py-5">
-  <p class="text-center text-muted mb-5">Har du frågor, feedback eller bara vill säga hej? Hör gärna av dig!</p>
 
+  {# =====================================================
+     ✅ INTROTEXT
+     ===================================================== #}
+  <p class="text-center text-muted mb-5">
+    Har du frågor, feedback eller bara vill säga hej? Hör gärna av dig!
+  </p>
+
+  {# =====================================================
+     ✅ FLASH-MEDDELANDEN (VISAS EFTER FORMULÄRSKICK)
+     ===================================================== #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
@@ -23,13 +36,18 @@
     {% endif %}
   {% endwith %}
 
+  {# =====================================================
+     ✅ KONTAKTFORMULÄR
+     ===================================================== #}
   <div class="row justify-content-center">
     <div class="col-lg-8">
       <div class="card contact-card shadow rounded p-4">
         <h3 class="mb-4">Skicka ett meddelande</h3>
+
         <form method="POST">
           {{ form.hidden_tag() }}
 
+          {# --- Namn och e-post --- #}
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">{{ form.name.label.text }}</label>
@@ -47,6 +65,7 @@
             </div>
           </div>
 
+          {# --- Ämnesrad --- #}
           <div class="mb-3">
             <label class="form-label">{{ form.subject.label.text }}</label>
             {{ form.subject(class="form-control", placeholder="Ämne") }}
@@ -55,6 +74,7 @@
             {% endfor %}
           </div>
 
+          {# --- Meddelande --- #}
           <div class="mb-3">
             <label class="form-label">{{ form.message.label.text }}</label>
             {{ form.message(class="form-control", placeholder="Skriv ditt meddelande här", rows=5) }}
@@ -63,15 +83,14 @@
             {% endfor %}
           </div>
 
+          {# --- Captcha (CaptchaFox) --- #}
           {{ form.captcha_token(id="captcha_token") }}
-
           <div class="mb-3">
             <div class="captchafox"
                  data-sitekey="{{ captcha_sitekey }}"
                  data-callback="captchafoxCallback">
             </div>
           </div>
-
           <script>
             window.captchafoxCallback = function (token) {
               console.log("CaptchaFox token mottaget:", token);
@@ -84,6 +103,7 @@
             };
           </script>
 
+          {# --- Skicka-knapp --- #}
           <div class="text-end">
             {{ form.submit(class="btn btn-primary px-4") }}
           </div>
@@ -92,15 +112,25 @@
     </div>
   </div>
 
+  {# =====================================================
+     ✅ ANDRA KONTAKTVÄGAR
+     ===================================================== #}
   <div class="mt-5 text-center">
     <h5>Andra kontaktvägar</h5>
     <ul class="list-unstyled">
-      <li><i class="bi bi-globe me-2"></i><a href="https://maria.tingvall.nu" target="_blank">maria.tingvall.nu</a></li>
-      <li><i class="bi bi-telephone me-2"></i>Telefon:
+      <li>
+        <i class="bi bi-globe me-2"></i>
+        <a href="https://maria.tingvall.nu" target="_blank">maria.tingvall.nu</a>
+      </li>
+      <li>
+        <i class="bi bi-telephone me-2"></i>
+        Telefon:
         <noscript><span>0701 76 02 22</span></noscript>
         <span id="phone-container"></span>
       </li>
     </ul>
+
+    {# --- JavaScript för att skriva ut telefonnumret dynamiskt --- #}
     <script>
       const parts = ['0701', '76', '02', '22'];
       const link = document.createElement('a');
@@ -110,8 +140,12 @@
     </script>
   </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+  {# =====================================================
+     ✅ EXTERN CAPTCHA-SKRIPT
+     ===================================================== #}
   <script async defer src="https://cdn.captchafox.com/api.js"></script>
 {% endblock %}

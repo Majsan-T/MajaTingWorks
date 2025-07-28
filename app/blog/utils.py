@@ -5,9 +5,19 @@ from app.models import User, BlogPost, db
 from app.extensions import mail
 from datetime import datetime, timezone
 
+# ======================
+# ✅ HANTERA BLOGGMAIL
+# ======================
+
 def check_and_send_blog_emails():
+    """
+    Kontrollera publicerade inlägg som ännu inte skickats ut via e-post
+    och skicka max 10 st åt gången.
+    """
     now = datetime.now(timezone.utc)
     MAX_EMAILS = 10
+
+    # ✅ Hämta inlägg som är publicerade men inte skickade
     pending_posts = BlogPost.query.filter(
         BlogPost.created_at <= now,
         BlogPost.email_sent == False
@@ -17,16 +27,20 @@ def check_and_send_blog_emails():
 
     for post in pending_posts:
         try:
-            notify_subscribers(post)
+            notify_subscribers(post)  # ✅ Skicka mail till alla prenumeranter
             post.email_sent = True
-            db.session.commit()  # Kommitta varje lyckad enskilt
+            db.session.commit()  # Kommitta efter varje lyckat utskick
         except Exception as e:
             current_app.logger.error(f"❌ Misslyckades skicka mail för post {post.id}: {e}")
             db.session.rollback()
 
 
 def notify_subscribers(post):
-    from app.extensions import mail  # För att undvika cirkulär import
+    """
+    Skicka mail om nytt blogginlägg till alla prenumeranter.
+    Om inga prenumeranter finns avslutas funktionen direkt.
+    """
+    from app.extensions import mail  # ✅ För att undvika cirkulär import
 
     subscribers = User.query.filter_by(role="subscriber").all()
     if not subscribers:
@@ -54,4 +68,4 @@ Maria Tingvall
 """
             mail.send(msg)
         except Exception as e:
-            current_app.logger.warning(f"Kunde inte skicka mail till {subscriber.email}: {e}")
+            current_app.logger.warning(f"⚠️ Kunde inte skicka mail till {subscriber.email}: {e}")

@@ -2,76 +2,130 @@
 {% block title %}blog{% endblock %}
 
 {% block content %}
+
+{# =====================================================
+   ✅ HERO-SEKTION (ÖVERSTA DELEN)
+   ===================================================== #}
 {% set bg_class = "blog-hero" %}
 {% set title = "Blogg" %}
 {% set subtitle = "Här kan du läsa mer om mina projekt." %}
 {% include "partials/_hero.html" %}
+
 {% block hero_buttons %}
-  {% if current_user.is_authenticated and current_user.role == 'admin' %}
+  {% if current_user.is_authenticated and current_user.has_role('admin') %}
     <a href="{{ url_for('blog.new_post') }}" class="btn btn-primary btn-sm mt-3">
       Skapa nytt blogg-inlägg
     </a>
   {% endif %}
 {% endblock %}
 
-<div class="container p-3 rounded border mb-4 mt-3" style="background-color: #fdf7f1; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);">
+{# =====================================================
+   ✅ SÖK- OCH FILTERSEKTION
+   ===================================================== #}
+<div class="container p-3 rounded border mb-4 mt-3"
+     style="background-color: #fdf7f1; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);">
     <form method="GET" class="search-form d-flex flex-wrap align-items-center gap-2">
+        {# Behåll andra GET-parametrar som inte är search/sort/category #}
         {% for key, value in request.args.items() %}
             {% if key not in ['category', 'sort', 'search'] %}
                 <input type="hidden" name="{{ key }}" value="{{ value }}">
             {% endif %}
         {% endfor %}
-        <input type="text" name="search" class="form-control form-control-sm" placeholder="Sök..." value="{{ request.args.get('search', '') }}" style="max-width: 160px;">
 
+        {# Sökfält #}
+        <input type="text" name="search" class="form-control form-control-sm"
+               placeholder="Sök..." value="{{ request.args.get('search', '') }}" style="max-width: 160px;">
+
+        {# Kategorifilter (SelectField från WTForms) #}
         {{ category_form.hidden_tag() }}
         {{ category_form.category(class="form-select form-select-sm", onchange="this.form.submit()", style="max-width: 180px;") }}
 
-        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()" style="max-width: 160px;">
+        {# Sorteringsfilter (nyast/äldst först) #}
+        <select name="sort" class="form-select form-select-sm"
+                onchange="this.form.submit()" style="max-width: 160px;">
             <option value="desc" {{ 'selected' if request.args.get('sort') == 'desc' else '' }}>Nyast först</option>
             <option value="asc" {{ 'selected' if request.args.get('sort') == 'asc' else '' }}>Äldst först</option>
         </select>
 
+        {# Sök- och rensaknapp #}
         <button type="submit" class="btn btn-primary btn-sm">Sök</button>
         <a href="{{ url_for('blog.index') }}" class="btn btn-secondary btn-sm">Rensa filter</a>
     </form>
-
 </div>
 
+{# =====================================================
+   ✅ LISTA MED BLOGGINLÄGG (KORT I GRID)
+   ===================================================== #}
 <div class="container">
     {% if posts %}
     <div class="row">
         {% for post in posts %}
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm rounded-4 brown-bg d-flex flex-column">
+
+                {# --- Kortets bild --- #}
                 <div class="overflow-hidden" style="height: 200px;">
-                    <img src="{{ url_for('static', filename=post.img_url) if post.img_url and post.img_url not in ['', 'default.jpg'] else url_for('static', filename='assets/img/default.jpg') }}" class="card-img-top object-fit-cover w-100 h-100" alt="Blogginlägg: {{ post.title }}">
+                    <img src="{{ url_for('static', filename=post.img_url) if post.img_url and post.img_url not in ['', 'default.jpg'] else url_for('static', filename='assets/img/default.jpg') }}"
+                         class="card-img-top object-fit-cover w-100 h-100"
+                         alt="Blogginlägg: {{ post.title }}">
                 </div>
+
+                {# --- Kortets textinnehåll --- #}
                 <div class="card-body flex-grow-1 d-flex flex-column">
                     {% if post.category %}
                       <span class="badge bg-secondary mb-2">
-                        <a href="{{ url_for('blog.posts_by_category', slug=post.category.slug, sort=sort_order, search=request.args.get('search', '')) }}">{{ post.category.title }}</a>
+                        <a href="{{ url_for('blog.posts_by_category', slug=post.category.slug, sort=sort_order, search=request.args.get('search', '')) }}">
+                            {{ post.category.title }}
+                        </a>
                       </span>
                     {% endif %}
-                    <h5 class="card-title brown-text"><a href="{{ url_for('blog.show_post', post_id=post.id) }}" class="text-decoration-none text-reset">{{ post.title }}</a></h5>
+
+                    <h5 class="card-title brown-text">
+                        <a href="{{ url_for('blog.show_post', post_id=post.id) }}" class="text-decoration-none text-reset">
+                            {{ post.title }}
+                        </a>
+                    </h5>
+
                     <h6 class="text-muted">{{ post.subtitle }}</h6>
+
+                    {# Publicerad/uppdaterad datum #}
                     <p class="text-muted mb-2">
                       <small><i class="bi bi-calendar3 btn-success"></i> Publicerad: {{ post.created_at | format_datetime_sv }}</small><br>
                       {% if post.updated_at %}
                         <small><i class="bi bi-calendar-check btn-secondary"></i> Uppdaterad: {{ post.updated_at | format_datetime_sv }}</small>
                       {% endif %}
                     </p>
-                    <p class="card-text">{{ post.body | strip_and_truncate(150) | safe }}</p>
 
+                    {# Kort utdrag av inläggets text #}
+                    <p class="card-text">{{ post.body | strip_and_truncate(150) | safe }}</p>
                 </div>
 
+                {# =====================================================
+                   ✅ KNAPPAR: LÄS MER + ADMIN (REDIGERA/RADERA)
+                   ===================================================== #}
                 <div class="card-footer bg-transparent border-top-0 mt-auto d-flex flex-column gap-2">
-                  <a href="{{ url_for('blog.show_post', post_id=post.id) }}" class="btn btn-primary btn-sm btn-outline-primary btn-sm rounded-pill px-3">Läs mer</a>
-                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                        <a href="{{ url_for('blog.edit_post', post_id=post.id) }}" class="btn btn-primary btn-sm btn-outline-primary btn-sm rounded-pill px-3">Redigera</a>
-                        <button type="button" class="btn btn-danger btn-sm btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#deleteBlogPostModal{{ post.id }}">
+                  <a href="{{ url_for('blog.show_post', post_id=post.id) }}"
+                     class="btn btn-primary btn-sm btn-outline-primary btn-sm rounded-pill px-3">
+                     Läs mer
+                  </a>
+
+                  {% if current_user.is_authenticated and current_user.has_role('admin') %}
+                        {# --- Redigera-knapp --- #}
+                        <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
+                           class="btn btn-primary btn-sm btn-outline-primary btn-sm rounded-pill px-3">
+                           Redigera
+                        </a>
+
+                        {# --- Radera-knapp (öppnar modal) --- #}
+                        <button type="button"
+                                class="btn btn-danger btn-sm btn-outline-primary btn-sm rounded-pill px-3"
+                                data-bs-toggle="modal" data-bs-target="#deleteBlogPostModal{{ post.id }}">
                             Radera
                         </button>
-                        <div class="modal fade" id="deleteBlogPostModal{{ post.id }}" tabindex="-1" aria-labelledby="deleteBlogPostModalLabel{{ post.id }}" aria-hidden="true">
+
+                        {# --- MODAL för radering --- #}
+                        <div class="modal fade" id="deleteBlogPostModal{{ post.id }}" tabindex="-1"
+                             aria-labelledby="deleteBlogPostModalLabel{{ post.id }}" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content rounded-4 shadow">
                                     <div class="modal-header">
@@ -91,31 +145,41 @@
                                 </div>
                             </div>
                         </div>
-                    {% endif %}
+                  {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
+
+    {# =====================================================
+       ✅ PAGINERING
+       ===================================================== #}
     <nav aria-label="Sidor">
         <ul class="pagination justify-content-center mt-4">
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                <a class="page-link brown-text" href="{{ url_for('blog.index', page=page-1, sort=sort_order, search=request.args.get('search', ''), category=current_category) }}">
+                <a class="page-link brown-text"
+                   href="{{ url_for('blog.index', page=page-1, sort=sort_order, search=request.args.get('search', ''), category=current_category) }}">
                     <i class="bi bi-chevron-left"></i>
                 </a>
             </li>
             {% for i in range(1, total_pages + 1) %}
                 <li class="page-item {% if page == i %}active{% endif %}">
-                    <a class="page-link brown-text" href="{{ url_for('blog.index', page=i, sort=sort_order, search=request.args.get('search', ''), category=current_category) }}">{{ i }}</a>
+                    <a class="page-link brown-text"
+                       href="{{ url_for('blog.index', page=i, sort=sort_order, search=request.args.get('search', ''), category=current_category) }}">
+                        {{ i }}
+                    </a>
                 </li>
             {% endfor %}
             <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                <a class="page-link brown-text" href="{{ url_for('blog.index', page=page+1, sort=sort_order, search=request.args.get('search', ''), category=current_category) }}">
+                <a class="page-link brown-text"
+                   href="{{ url_for('blog.index', page=page+1, sort=sort_order, search=request.args.get('search', ''), category=current_category) }}">
                     <i class="bi bi-chevron-right"></i>
                 </a>
             </li>
         </ul>
     </nav>
+
     {% else %}
     <p>Inga inlägg tillgängliga.</p>
     {% endif %}

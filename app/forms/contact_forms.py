@@ -3,10 +3,28 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, HiddenField, TextAreaField
 from wtforms.validators import DataRequired, Email
 
+# ===================================================
+# ✅ KONTAKTFORMULÄR – FÖR KONTAKTSIDAN
+# ===================================================
 class ContactForm(FlaskForm):
-    name = StringField("Namn", validators=[DataRequired()])
-    email = StringField("E-postadress", validators=[DataRequired(), Email()])
-    subject = StringField("Ämne", validators=[DataRequired()])
-    message = TextAreaField("Meddelande", validators=[DataRequired()])
-    captcha_token = HiddenField()  # 👈 captchafox token
-    submit = SubmitField("Skicka Meddelande")
+    """Formulär för att skicka meddelande via kontaktsidan."""
+    name = StringField(
+        "Namn",
+        validators=[DataRequired()]  # Namn måste anges
+    )
+    email = StringField(
+        "E-postadress",
+        validators=[DataRequired(), Email()]  # Måste vara giltig e-post
+    )
+    subject = StringField(
+        "Ämne",
+        validators=[DataRequired()]  # Ämnesrad är obligatorisk
+    )
+    message = TextAreaField(
+        "Meddelande",
+        validators=[DataRequired()]  # Själva meddelandet får inte vara tomt
+    )
+    captcha_token = HiddenField()
+    # 👆 Token används av CaptchaFox (eller annan captcha) för att förhindra spam
+
+    submit = SubmitField("Skicka Meddelande")  # Skickar formuläret

@@ -14,23 +14,23 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint == 'pages.home' %}active fw-semibold{% endif %}" href="{{ url_for('pages.home') }}">Hem</a>
+          <a class="nav-link {% if request.page == 'pages.home' %}active fw-semibold{% endif %}" href="{{ url_for('pages.home') }}">Hem</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint == 'blog.index' %}active fw-semibold{% endif %}" href="{{ url_for('blog.index') }}">Blogg</a>
+          <a class="nav-link {% if request.page == 'blog.index' %}active fw-semibold{% endif %}" href="{{ url_for('blog.index') }}">Blogg</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint == 'portfolio.index' %}active fw-semibold{% endif %}" href="{{ url_for('portfolio.index') }}">Portfolio</a>
+          <a class="nav-link {% if request.page == 'portfolio.index' %}active fw-semibold{% endif %}" href="{{ url_for('portfolio.index') }}">Portfolio</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint == 'pages.cv' %}active fw-semibold{% endif %}" href="{{ url_for('pages.cv') }}">Curriculum vitae</a>
+          <a class="nav-link {% if request.page == 'pages.cv' %}active fw-semibold{% endif %}" href="{{ url_for('pages.cv') }}">Curriculum vitae</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint == 'pages.about' %}active fw-semibold{% endif %}" href="{{ url_for('pages.about') }}">Om sidan</a>
+          <a class="nav-link {% if request.page == 'pages.about' %}active fw-semibold{% endif %}" href="{{ url_for('pages.about') }}">Om sidan</a>
         </li>
 
         {% if current_user.is_authenticated %}
-          {% if current_user.role == 'admin' %}
+          {% if current_user.is_authenticated and current_user.has_role('admin') %}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Adminpanel</a>
             </li>

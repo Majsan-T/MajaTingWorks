@@ -1,44 +1,58 @@
 # app/blog/blog.py
+# ================================================
+# ✅ IMPORTER & KONFIGURATION
+# ================================================
 import os
+import uuid
+import logging
+import pytz
+from math import ceil
+from PIL import Image
+from datetime import datetime, timezone
+
 from flask import Blueprint, render_template, redirect, url_for, current_app, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from flask_mail import Message
+from werkzeug.utils import secure_filename
+from babel.dates import format_datetime
+
 from app.blog.utils import notify_subscribers
-from app.decorators import admin_only
+from app.decorators import roles_required
 from app.extensions import db, csrf, mail
 from app.forms import BlogPostForm, CommentForm, DeleteForm, CategorySelectForm, CategoryFilterForm, BlogCategoryForm
 from app.models import BlogPost, Comment, User, BlogCategory
 from app.utils.time import get_local_now, DEFAULT_TZ
 from app.utils.image_utils import save_image, delete_existing_image, _handle_quill_upload
-from app.utils.helpers import get_local_now, sanitize_html, DEFAULT_TZ
-from babel.dates import format_datetime
-import datetime
-from datetime import datetime, time, timezone
-from PIL import Image
-from werkzeug.utils import secure_filename
-from zoneinfo import ZoneInfo
-import uuid
-import logging # För att logga händelser
-import pytz
-from math import ceil
+from app.utils.helpers import sanitize_html
+from app.utils.views import increment_post_views
 
+# ✅ Flask Blueprint för bloggen
 blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
-logger = logging.getLogger(__name__) # Hämta logger för denna modul
+
+logger = logging.getLogger(__name__)  # Loggning
 utc_dt = datetime.utcnow().replace(tzinfo=pytz.utc)
 stockholm_time = utc_dt.astimezone(pytz.timezone("Europe/Stockholm"))
 formatted = format_datetime(stockholm_time, locale='sv_SE')
 
 POSTS_PER_PAGE = 12
-
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 MAX_SIZE_MB = 10
 
+# ================================================
+# ✅ HJÄLPFUNKTIONER
+# ================================================
 def allowed_file(filename):
+    """Kontrollera om filen har en tillåten filändelse."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 def handle_image_upload(img_file):
+    """
+    Hantera uppladdning och konvertering av bilder:
+    - Spara tillfälligt
+    - Konvertera till WEBP
+    - Optimera storlek till max 800px bredd
+    """
     if not img_file or img_file.filename == "":
         return ""
 
@@ -69,6 +83,9 @@ def handle_image_upload(img_file):
         return ""
 
 def send_new_post_notification(post):
+    """
+    Skicka e-postnotis till prenumeranter när nytt inlägg publiceras.
+    """
     subscribers = User.query.filter_by(role='subscriber').all()
     for subscriber in subscribers:
         msg = Message(
@@ -78,12 +95,19 @@ def send_new_post_notification(post):
         )
         mail.send(msg)
 
+# ================================================
+# ✅ ROUTER – VISA BLOGGINLÄGG
+# ================================================
 @blog_bp.route("/")
 @blog_bp.route("/page/<int:page>")
 def index(page=1):
+    """
+    Lista alla publicerade blogginlägg:
+    - Sök, filtrera och sortera
+    - Paginering
+    """
     POSTS_PER_PAGE = 12
 
-    # Läs in GET-parametrar
     sort_order = request.args.get("sort", "desc")
     search_term = request.args.get("search", "").strip()
     category_filter = request.args.get("category", type=int)
@@ -109,7 +133,7 @@ def index(page=1):
     if category_filter:
         base_q = base_q.filter(BlogPost.category_id == category_filter)
 
-    # 5) Applicera sök-filter om satt
+    # Applicera sök-filter om satt
     if search_term:
         base_q = base_q.filter(
             db.or_(
@@ -119,11 +143,11 @@ def index(page=1):
             )
         )
 
-    # 6) Sortera
+    # Sortering
     order_func = BlogPost.created_at.asc() if sort_order == "asc" else BlogPost.created_at.desc()
     base_q = base_q.order_by(order_func)
 
-    # 7) Paginerings‐logik
+    # Paginering
     total_posts = base_q.count()
     posts = (base_q
              .offset((page - 1) * POSTS_PER_PAGE)
@@ -131,10 +155,10 @@ def index(page=1):
              .all())
     total_pages = (total_posts + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
 
-    # 8) Radera‐form
+    # Radera‐formulär
     delete_form = DeleteForm()
 
-    # 9) Rendera templaten
+    # Rendera templaten
     return render_template(
         "blog/blog.html",
         posts=posts,
@@ -146,32 +170,77 @@ def index(page=1):
         delete_form=delete_form
     )
 
-@blog_bp.route("/category/<slug>")
-@blog_bp.route("/category/<slug>/page/<int:page>")
-def posts_by_category(slug, page=1):
-    category = BlogCategory.query.filter_by(slug=slug).first_or_404()
-    sort_order = request.args.get('sort', 'desc')  # 'desc' som standard
-    query = BlogPost.query.filter_by(category=category)
-    query = query.order_by(
-        BlogPost.created_at.asc() if sort_order == 'asc' else BlogPost.created_at.desc()
-    )
+@blog_bp.route("/post/<int:post_id>", methods=["GET", "POST"])
+def show_post(post_id):
+    """
+    Visa ett specifikt blogginlägg:
+    - Visa kommentarer
+    - Låt användare skriva nya kommentarer
+    - Visa relaterade senaste inlägg
+    """
+    post = BlogPost.query.get_or_404(post_id)
+    now = get_local_now()
 
-    total_posts = query.count()
-    start = (page - 1) * POSTS_PER_PAGE
-    posts = query.slice(start, start + POSTS_PER_PAGE).all()
-    total_pages = (total_posts + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+    # Tvinga både created_at och updated_at att vara offset-aware (UTC)
+    if post.created_at and post.created_at.tzinfo is None:
+        post.created_at = post.created_at.replace(tzinfo=timezone.utc)
 
-    for post in posts:
-        print(f"Post: {post.title} | Category: {post.category} | Slug: {getattr(post.category, 'slug', None)}")
+    if post.updated_at and post.updated_at.tzinfo is None:
+        post.updated_at = post.updated_at.replace(tzinfo=timezone.utc)
 
-    return render_template("blog/layout.html", posts=posts, category=category,
-                           page=page, total_pages=total_pages, sort_order=sort_order)
+    # Ladda senaste inlägg för sidfoten
+    recent_query = (BlogPost.query
+                    .filter(BlogPost.id != post_id)
+                    .filter(BlogPost.created_at <= now)
+                    .order_by(BlogPost.created_at.desc()))
+
+    recent_page = request.args.get("recent_page", 1, type=int)
+    per_page = 5
+    total = recent_query.count()
+    total_pages = (total + per_page - 1) // per_page
+    recent_posts = recent_query.offset((recent_page - 1) * per_page).limit(per_page).all()
+    increment_post_views(post)  # ✅ Öka visningsräknaren
+
+    comment_form = CommentForm()
+    delete_form = DeleteForm()
+
+    if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            abort(401)
+        new_comment = Comment(
+            text=comment_form.comment_text.data,
+            comment_author=current_user,
+            post=post
+        )
+        db.session.add(new_comment)
+        db.session.commit()
+        return redirect(url_for('blog.show_post', post_id=post.id))
+
+    return render_template('blog/post.html',
+                           post=post,
+                           now=now,
+                           comment_form=comment_form,
+                           delete_form=delete_form,
+                           recent_posts=recent_posts,
+                           recent_page=recent_page,
+                           recent_total_pages=total_pages)
+
+# ================================================
+# ✅ ROUTER – SKAPA NYTT BLOGGINLÄGG
+# ================================================
+
 
 
 @blog_bp.route("/new_post", methods=["GET", "POST"])
 @login_required
-@admin_only
+@roles_required("admin")
 def new_post():
+    """
+    Skapa ett nytt blogginlägg:
+    - Hanterar bild (konverterar till WEBP)
+    - Hanterar datum/tid (Stockholmstid → UTC)
+    - Skickar notis till prenumeranter
+    """
     form = BlogPostForm()
     cats = BlogCategory.query.order_by(BlogCategory.title).all()
     form.category.choices = [(c.id, c.title) for c in cats]
@@ -211,6 +280,7 @@ def new_post():
         print("Created at (local):", post_created_at_local.isoformat())
         print("Created at (UTC):", post_created_at_utc.isoformat())
 
+        # --- Skapa nytt inlägg ---
         new_post = BlogPost(
             title=form.title.data,
             subtitle=form.subtitle.data,
@@ -231,63 +301,24 @@ def new_post():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Fel vid databasoperation: {e}")
+            print("FEL VID SPARANDE:", e)
             flash("Ett fel uppstod när inlägget skulle sparas.", "danger")
 
     return render_template("blog/new_post.html", form=form)
 
-@blog_bp.route("/post/<int:post_id>", methods=["GET", "POST"])
-def show_post(post_id):
-    post = BlogPost.query.get_or_404(post_id)
-    now = datetime.now(pytz.UTC)
 
-    # Tvinga både created_at och updated_at att vara offset-aware (UTC)
-    if post.created_at and post.created_at.tzinfo is None:
-        post.created_at = post.created_at.replace(tzinfo=timezone.utc)
-
-    if post.updated_at and post.updated_at.tzinfo is None:
-        post.updated_at = post.updated_at.replace(tzinfo=timezone.utc)
-
-    # Ladda senaste inlägg för sidfoten
-    recent_query = (BlogPost.query
-                    .filter(BlogPost.id != post_id)
-                    .filter(BlogPost.created_at <= now)
-                    .order_by(BlogPost.created_at.desc()))
-
-    recent_page = request.args.get("recent_page", 1, type=int)
-    per_page = 5
-    total = recent_query.count()
-    total_pages = (total + per_page - 1) // per_page
-    recent_posts = recent_query.offset((recent_page - 1) * per_page).limit(per_page).all()
-
-    comment_form = CommentForm()
-    delete_form = DeleteForm()
-
-    if comment_form.validate_on_submit():
-        if not current_user.is_authenticated:
-            abort(401)
-        new_comment = Comment(
-            text=comment_form.comment_text.data,
-            comment_author=current_user,
-            post=post
-        )
-        db.session.add(new_comment)
-        db.session.commit()
-        return redirect(url_for('blog.show_post', post_id=post.id))
-
-    return render_template('blog/post.html',
-                           post=post,
-                           now=now,
-                           comment_form=comment_form,
-                           delete_form=delete_form,
-                           recent_posts=recent_posts,
-                           recent_page=recent_page,
-                           recent_total_pages=total_pages)
-
-
+# ================================================
+# ✅ ROUTER – REDIGERA BLOGGINLÄGG
+# ================================================
 @blog_bp.route("/edit_post/<int:post_id>", methods=["GET", "POST"])
 @login_required
-@admin_only
+@roles_required("admin")
 def edit_post(post_id):
+    """
+    Redigera befintligt blogginlägg:
+    - Kan byta/radera bild
+    - Uppdaterar updated_at om något ändras
+    """
     post = BlogPost.query.get_or_404(post_id)
 
     from app.utils.time import DEFAULT_TZ, get_local_now
@@ -303,7 +334,7 @@ def edit_post(post_id):
     form.category.choices = [(c.id, c.title) for c in cats]
 
     if form.validate_on_submit():
-        # --- Bildradering ---
+        # --- Radera gammal bild ---
         if form.delete_image.data and post.img_url and post.img_url != "assets/img/default.jpg":
             try:
                 delete_existing_image(post.img_url, folder="")
@@ -322,7 +353,7 @@ def edit_post(post_id):
                 current_app.logger.error(f"Fel vid ny bilduppladdning: {e}")
                 flash("Fel vid bilduppladdning.", "warning")
 
-        # --- Text och metadata ---
+        # --- Uppdatera text och metadata ---
         post.title = form.title.data
         post.subtitle = form.subtitle.data
         post.body = sanitize_html(form.body.data)
@@ -330,7 +361,7 @@ def edit_post(post_id):
 
         # Om något ändrats: sätt updated_at
         if db.session.is_modified(post):
-            post.updated_at = get_local_now().astimezone(timezone.utc)
+            post.updated_at = get_local_now()
 
         try:
             db.session.commit()
@@ -342,15 +373,21 @@ def edit_post(post_id):
             flash("Fel vid sparning. Kontrollera loggarna.", "danger")
 
     return render_template("blog/edit_blog.html", form=form, post=post)
-    
 
+
+# ================================================
+# ✅ ROUTER – RADERA BLOGGINLÄGG
+# ================================================
 @blog_bp.route('/delete/<int:post_id>', methods=['POST'])
 @login_required
-@admin_only
+@roles_required("admin")
 def delete_post(post_id):
+    """
+    Radera ett blogginlägg (endast admin).
+    """
     post = BlogPost.query.get_or_404(post_id)
 
-    if current_user.role != "admin":
+    if not current_user.has_role("admin"):
         abort(403)
 
     db.session.delete(post)
@@ -358,12 +395,19 @@ def delete_post(post_id):
     flash("Inlägget raderades.", "info")
     return redirect(url_for("blog.index"))
 
-
+# ================================================
+# ✅ ROUTER – LADDA UPP BILD VIA EDITOR (t.ex. Quill)
+# ================================================
 @blog_bp.route('/upload', methods=['POST'])
 @login_required
-@admin_only
+@roles_required("admin")
 @csrf.exempt
 def upload_image():
+    """
+    Ladda upp en bild via editor (t.ex. Quill):
+    - Konverterar alltid till WEBP
+    - Sätter unik fil med timestamp
+    """
     file = request.files.get("image")
 
     if not file or not allowed_file(file.filename):
@@ -396,3 +440,41 @@ def upload_image():
     except Exception as e:
         logger.exception(f"Fel vid bildhantering: {e}")
         return jsonify({'error': 'Fel vid konvertering eller sparning'}), 500
+
+# ================================================
+# ✅ ROUTER – VISA INLÄGG EFTER KATEGORI
+# ================================================
+@blog_bp.route("/category/<slug>")
+@blog_bp.route("/category/<slug>/page/<int:page>")
+def posts_by_category(slug, page=1):
+    """
+    Visa blogginlägg filtrerade på en specifik kategori:
+    - Filtrerar via kategori-slug
+    - Stöd för paginering
+    - Sorteringsval (asc/desc)
+    """
+    # --- Hämta kategori baserat på slug ---
+    category = BlogCategory.query.filter_by(slug=slug).first_or_404()
+
+    # --- Hämta sorteringsordning (default: senaste först) ---
+    sort_order = request.args.get('sort', 'desc')  # 'desc' som standard
+
+    # --- Filtrera inlägg på kategori ---
+    query = BlogPost.query.filter_by(category=category)
+    query = query.order_by(
+        BlogPost.created_at.asc() if sort_order == 'asc' else BlogPost.created_at.desc()
+    )
+
+    # --- Paginering ---
+    total_posts = query.count()
+    start = (page - 1) * POSTS_PER_PAGE
+    posts = query.slice(start, start + POSTS_PER_PAGE).all()
+    total_pages = (total_posts + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+
+    # --- Rendera kategorisida ---
+    return render_template("blog/layout.html", posts=posts, category=category,
+                           page=page, total_pages=total_pages, sort_order=sort_order)
+
+
+
+

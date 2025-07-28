@@ -6,14 +6,41 @@ from app.models import BlogPost
 from app.extensions import db
 # from app.blog.cli import send_blog_mails
 
+# ===================================================
+# ✅ FUNKTION FÖR ATT REGISTRERA ALLA CLI-KOMMANDON
+# ===================================================
 def register_cli_commands(app):
+    """
+    Registrera alla CLI-kommandon för appen.
+
+    🔹 Exempel:
+        flask fix-post-timestamps
+        flask reset-bad-updated-at
+        (send-blog-mails kan läggas till här om aktiverat)
+    """
     # app.cli.add_command(send_blog_mails)
     pass
 
+
+# ===================================================
+# ✅ CLI-KOMMANDO: FIXERA TIDSSTÄMPLAR
+# ===================================================
 @click.command("fix-post-timestamps")
 @with_appcontext
 def fix_post_timestamps():
-    """Gör alla created_at / updated_at fält offset-aware (UTC)."""
+    """
+    Gör alla created_at / updated_at fält **offset-aware (UTC)**.
+
+    ✅ Problem:
+        Vissa poster kan vara sparade utan tidszon (naiva datetimer).
+
+    ✅ Lösning:
+        - Lägger till UTC-tidszon där det saknas.
+        - Räknar och rapporterar hur många poster som fixats.
+
+    🔹 Användning:
+        flask fix-post-timestamps
+    """
     fixed_count = 0
     posts = BlogPost.query.all()
 
@@ -34,11 +61,26 @@ def fix_post_timestamps():
     click.echo(f"✅ {fixed_count} inlägg uppdaterades med UTC-tidszon.")
 
 
-
+# ===================================================
+# ✅ CLI-KOMMANDO: ÅTERSTÄLL FELAKTIGA DATUM
+# ===================================================
 @click.command("reset-bad-updated-at")
 @with_appcontext
 def reset_bad_updated_at():
-    """Sätter updated_at = None om det är tidigare än created_at."""
+    """
+    Sätter `updated_at = None` om det är tidigare än `created_at`.
+
+    ✅ Problem:
+        Vissa poster kan ha felaktigt uppdateringsdatum, t.ex.
+        updated_at < created_at (på grund av fel migreringar eller import).
+
+    ✅ Lösning:
+        - Loggar de poster som rättas till.
+        - Sätter updated_at till NULL om inkonsekvens upptäcks.
+
+    🔹 Användning:
+        flask reset-bad-updated-at
+    """
     fixed_count = 0
     posts = BlogPost.query.all()
 

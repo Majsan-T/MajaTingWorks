@@ -1,13 +1,15 @@
 # app/pages/pages.py
 from datetime import datetime
-from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app, Response
+from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app, Response, session
 from flask_mail import Message
 from flask_login import login_required, current_user
 from app.extensions import mail, db
 from app.forms import ContactForm
 from app.forms.shared_forms import CvEditForm
-from app.models import CVContent, BlogPost, PortfolioItem, Category
+from app.models import CVContent, BlogPost, PortfolioItem, Category, db, PageView, BlogCategory
+
 from app.utils.helpers import log_info
+from app.utils.views import increment_post_views, increment_page_view
 import requests
 
 pages_bp = Blueprint("pages", __name__)
@@ -32,23 +34,18 @@ def verify_captchafox(response_token):
 def home():
     log_info("🛠 Adminpanelen laddades")
     year = datetime.now().year
-    print(f"App root path: {current_app.root_path}")
+    increment_post_views("home")
     return render_template('index.html', year=year)
-
-# Testsida
-@pages_bp.route('/test')
-def test():
-    return render_template('test.html')
-
 
 @pages_bp.route("/about")
 def about():
+    increment_post_views("about")
     log_info("🛠 Adminpanelen laddades")
     return render_template("pages/about.html")
 
-
 @pages_bp.route("/contact", methods=["GET", "POST"])
 def contact():
+    increment_post_views("contact")
     current_app.logger.info(f"Route /admin/ kördes av {current_user.email}")
     form = ContactForm()
     site_key = current_app.config.get("CAPTCHAFOX_SITE_KEY")
@@ -81,6 +78,7 @@ def contact():
 def cv():
     current_app.logger.info(f"Route /admin/ kördes av {current_user.email}")
     form = CvEditForm()
+    increment_post_views("cv")
 
     # Se till att det alltid finns ett CVContent-objekt
     content = CVContent.query.first()
@@ -90,7 +88,7 @@ def cv():
         db.session.commit()
 
     # Hantera formulärinlämning
-    if form.validate_on_submit() and current_user.is_authenticated and current_user.role == "admin":
+    if form.validate_on_submit() and current_user.is_authenticated and current_user.has_role("admin"):
         print("User authenticated:", current_user.is_authenticated)
         print("User role:", getattr(current_user, 'role', None))
         if form.validate_on_submit():
@@ -115,7 +113,7 @@ def cv():
         return redirect(url_for("pages.cv"))
 
     # Fyll i formuläret vid GET (för admin)
-    if request.method == "GET" and current_user.is_authenticated and current_user.role == "admin":
+    if request.method == "GET" and current_user.is_authenticated and current_user.has_role("admin"):
         form.about.data = content.about
         form.experience.data = content.experience
         form.education.data = content.education
@@ -136,6 +134,7 @@ def cv():
 
 @pages_bp.route("/sitemap.xml")
 def sitemap():
+    increment_page_view()
     pages = []
     today = datetime.utcnow().date().isoformat()
 

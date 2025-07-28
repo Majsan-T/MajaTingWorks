@@ -279,6 +279,8 @@ html {
 .bg-light-pink { background-color: var(--bg-soft) !important; }
 .bg-dark-purple { background-color: #4e2a3e; }
 .bg-orange { background-color: #f47c2c; }
+.bg-light-orange { background-color: #ffcc99; }
+.bg-light-yellow { background-color: #ebe6de; }
 .blue { color: blue; }
 .coffee { color: #6f4e37; }
 .red { color: red; }
@@ -471,4 +473,24 @@ figure,
     color: #000;
     margin-bottom: 0.5rem;
   }
+}
+
+/* ── Tables  ───────────────────────── */
+.table th:first-child,
+.table td:first-child {
+    width: auto;
+    white-space: normal;
+}
+
+.fixed-col-visningar {
+    width: 100px;
+    text-align: right;
+}
+/* ── Progressbar ───────────────────── */
+.progress {
+    height: 6px;
+    background-color: #e9ecef; /* Bootstrap standard */
+}
+.progress-bar {
+    background-color: #ffc107; /* Gul för statistik, kan ändras */
 }

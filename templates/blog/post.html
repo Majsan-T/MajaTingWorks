@@ -1,155 +1,186 @@
-<!-- templates/blog/post.html-->
 {% extends "base.html" %}
-
 {% block content %}
 
+{# =====================================================
+   ✅ HERO / HEADER FÖR DETTA INLÄGG
+   ===================================================== #}
 <div class="page-hero blog-post-hero">
   <div>
     <h1>{{ post.title }}</h1>
     <p class="lead">{{ post.subtitle }}</p>
 
+    {# --- Datumlogik: hantera timezone-naive och planerade inlägg --- #}
     <p class="text-muted mb-2">
-      {% if post.created_at <= now %}
+      {% set created_at_naive = post.created_at.replace(tzinfo=None) if post.created_at.tzinfo else post.created_at %}
+      {% set updated_at_naive = post.updated_at.replace(tzinfo=None) if post.updated_at and post.updated_at.tzinfo else post.updated_at %}
+      {% set now_naive = now.replace(tzinfo=None) if now.tzinfo else now %}
+
+      {% if created_at_naive <= now_naive %}
         <small><i class="bi bi-calendar3 btn-success"></i> Publicerad: {{ post.created_at | format_datetime_sv }}</small><br>
       {% else %}
         <small><i class="bi bi-hourglass-split"></i> Planerad: {{ post.created_at | format_datetime_sv }}</small><br>
       {% endif %}
-      {% if post.updated_at and post.updated_at > post.created_at %}
+
+      {% if updated_at_naive and updated_at_naive > created_at_naive %}
         <small><i class="bi bi-calendar-check"></i> Uppdaterad: {{ post.updated_at | format_datetime_sv }}</small>
       {% endif %}
     </p>
 
-      {% if post.category %}
+    {# --- Kategori-länk --- #}
+    {% if post.category %}
       <p class="card-text"><small class="text-muted">
           <i class="bi bi-tag"></i>
           <a href="{{ url_for('blog.index', category=post.category.name) }}" class="text-decoration-none text-secondary">
               {{ post.category.title }}
-          </a></small></p>
-      {% endif %}
+          </a></small>
+      </p>
+    {% endif %}
   </div>
 </div>
 
+{# =====================================================
+   ✅ HUVUDINNEHÅLL & SIDKOLUMN
+   ===================================================== #}
 <div class="container mt-5">
-    <div class="row">
-        <!-- Vänster kolumn: Huvudinnehåll -->
-        <div class="col-md-8">
+  <div class="row">
 
-            {% if post.img_url and post.img_url != 'default.jpg' %}
-                <div class="overflow-hidden" style="height: 600px;">
-                    <img src="{{ url_for('static', filename=post.img_url) }}" class="card-img-top object-fit-cover w-100 h-100" alt="Bloggbild">
-                </div>
-            {% else %}
-                <div class="overflow-hidden" style="height: 600px;">
-                    <img src="{{ url_for('static', filename='assets/img/default.jpg') }}" class="card-img-top object-fit-cover w-100 h-100" alt="Standardbild">
-                </div>
-            {% endif %}
+    {# =================================================
+       ✅ VÄNSTER KOLUMN: INLÄGG & KOMMENTARER
+       ================================================= #}
+    <div class="col-md-8">
 
-            {% set allow_html = current_user.is_authenticated and current_user.role == 'admin' %}
-            <div class="content">
-                <div class="post-content">
-                  {{ post.body|safe }}
-                </div>
-            </div>
+      {# --- Inläggsbild --- #}
+      {% if post.img_url and post.img_url != 'default.jpg' %}
+        <div class="overflow-hidden" style="height: 600px;">
+          <img src="{{ url_for('static', filename=post.img_url) }}" class="card-img-top object-fit-cover w-100 h-100" alt="Bloggbild">
+        </div>
+      {% else %}
+        <div class="overflow-hidden" style="height: 600px;">
+          <img src="{{ url_for('static', filename='assets/img/default.jpg') }}" class="card-img-top object-fit-cover w-100 h-100" alt="Standardbild">
+        </div>
+      {% endif %}
 
-            <!-- Kommentarer -->
-            {% if post.comments|selectattr('visible')|list %}
-              <div class="print-comments">
-                <h3 class="mt-5">Kommentarer</h3>
-                {% for comment in post.comments if comment.visible %}
-                  <div class="card mb-4 shadow-sm border-0 rounded-4 bg-light-pink">
-                    <div class="card-body">
-                      <div class="d-flex align-items-start mb-2">
-                        <i class="bi bi-chat-text-fill me-2 text-secondary icon-sm"></i>
-                        <h6 class="mb-0">{{ comment.comment_author.name }}</h6>
-                      </div>
-                      <div class="ps-4">
-                        <p class="mb-0 text-dark" style="white-space: pre-line;">{{ comment.text }}</p>
-                      </div>
-                    </div>
-                  </div>
-                {% endfor %}
+      {# --- Inläggstext --- #}
+      <div class="content">
+        <div class="post-content">
+          {{ post.body|safe }}
+        </div>
+      </div>
+
+      {# =================================================
+         ✅ KOMMENTARER SOM REDAN FINNS
+         ================================================= #}
+      {% if post.comments|selectattr('visible')|list %}
+        <div class="print-comments">
+          <h3 class="mt-5">Kommentarer</h3>
+          {% for comment in post.comments if comment.visible %}
+            <div class="card mb-4 shadow-sm border-0 rounded-4 bg-light-pink">
+              <div class="card-body">
+                <div class="d-flex align-items-start mb-2">
+                  <i class="bi bi-chat-text-fill me-2 text-secondary icon-sm"></i>
+                  <h6 class="mb-0">{{ comment.comment_author.name }}</h6>
+                </div>
+                <div class="ps-4">
+                  <p class="mb-0 text-dark" style="white-space: pre-line;">{{ comment.text }}</p>
+                </div>
               </div>
-            {% endif %}
-
-            <!-- Kommentarformulär -->
-            {% if current_user.is_authenticated %}
-              <form method="POST" class="no-print">
-                  {{ comment_form.hidden_tag() }}
-                  <div class="form-group mb-3">
-                      <label for="comment_text" class="form-label">Skriv en kommentar</label>
-                      {{ comment_form.comment_text(class="form-control", placeholder="Skriv din kommentar här") }}
-                      {% for error in comment_form.comment_text.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                      {% endfor %}
-                  </div>
-                  <button type="submit" class="btn btn-primary btn-sm px-3 py-2 mt-1"><i class="bi bi-chat-left-dots"></i> Skicka Kommentar</button>
-              </form>
-            {% else %}
-              <p class="mt-4 no-print"><a href="{{ url_for('auth.login') }}">Logga in</a> för att skriva en kommentar.</p>
-            {% endif %}
-        </div>
-
-        <!-- Höger kolumn: Senaste inlägg som Cards -->
-        <div class="col-md-4">
-            <h5 class="mb-4">Senaste inlägg</h5>
-            <div class="d-flex flex-column gap-3">
-                {% for recent in recent_posts %}
-                <div class="card shadow-sm">
-                    <div class="row g-0">
-                        <div class="col-4">
-                            {% if recent.img_url and 'uploads' in recent.img_url %}
-                                <div class="overflow-hidden" style="height: 100px;">
-                                    <img src="{{ url_for('static', filename=recent.img_url) }}" class="object-fit-cover w-100 h-100" alt="Thumbnail">
-                                </div>
-                            {% else %}
-                                <img src="{{ url_for('static', filename='assets/img/default.jpg') }}" class="img-fluid rounded-start" alt="Defaultbild">
-                            {% endif %}
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body p-2">
-                                <h6 class="card-title mb-1">
-                                    <a href="{{ url_for('blog.show_post', post_id=recent.id) }}" class="text-decoration-none text-dark">
-                                        {{ recent.title[:50] }}{% if recent.title|length > 50 %}...{% endif %}
-                                    </a>
-                                </h6>
-                                <p class="card-subtitle small text-muted mb-0">{{ recent.created_at | format_datetime_sv('short') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
             </div>
-
-            <!-- Enkel paginering för tidigare inlägg -->
-            {% if recent_total_pages > 1 %}
-            <nav class="mt-3" aria-label="Senaste inlägg">
-              <ul class="pagination justify-content-center pagination-sm">
-                <li class="page-item {% if recent_page == 1 %}disabled{% endif %}">
-                  <a class="page-link" href="{{ url_for('blog.show_post', post_id=post.id, recent_page=recent_page - 1) }}">
-                    <i class="bi bi-chevron-left"></i>
-                  </a>
-                </li>
-
-                {% for i in range(1, recent_total_pages + 1) %}
-                  <li class="page-item {% if i == recent_page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('blog.show_post', post_id=post.id, recent_page=i) }}">{{ i }}</a>
-                  </li>
-                {% endfor %}
-
-                <li class="page-item {% if recent_page == recent_total_pages %}disabled{% endif %}">
-                  <a class="page-link" href="{{ url_for('blog.show_post', post_id=post.id, recent_page=recent_page + 1) }}">
-                    <i class="bi bi-chevron-right"></i>
-                  </a>
-                </li>
-              </ul>
-            </nav>
-            {% endif %}
-            <div class="text-end mt-4">
-              <a href="{{ url_for('blog.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                ← Tillbaka till bloggen
-              </a>
-            </div>
+          {% endfor %}
         </div>
+      {% endif %}
+
+      {# =================================================
+         ✅ FORMULÄR FÖR NY KOMMENTAR
+         ================================================= #}
+      {% if current_user.is_authenticated %}
+        <form method="POST" class="no-print">
+          {{ comment_form.hidden_tag() }}
+          <div class="form-group mb-3">
+            <label for="comment_text" class="form-label">Skriv en kommentar</label>
+            {{ comment_form.comment_text(class="form-control", placeholder="Skriv din kommentar här") }}
+            {% for error in comment_form.comment_text.errors %}
+              <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm px-3 py-2 mt-1">
+            <i class="bi bi-chat-left-dots"></i> Skicka Kommentar
+          </button>
+        </form>
+      {% else %}
+        <p class="mt-4 no-print">
+          <a href="{{ url_for('auth.login') }}">Logga in</a> för att skriva en kommentar.
+        </p>
+      {% endif %}
     </div>
+
+    {# =================================================
+       ✅ HÖGER KOLUMN: SENASTE INLÄGG + PAGINERING
+       ================================================= #}
+    <div class="col-md-4">
+
+      {# --- Lista med senaste inlägg (kortform) --- #}
+      <h5 class="mb-4">Senaste inlägg</h5>
+      <div class="d-flex flex-column gap-3">
+        {% for recent in recent_posts %}
+          <div class="card shadow-sm">
+            <div class="row g-0">
+              <div class="col-4">
+                {% if recent.img_url and 'uploads' in recent.img_url %}
+                  <div class="overflow-hidden" style="height: 100px;">
+                    <img src="{{ url_for('static', filename=recent.img_url) }}" class="object-fit-cover w-100 h-100" alt="Thumbnail">
+                  </div>
+                {% else %}
+                  <img src="{{ url_for('static', filename='assets/img/default.jpg') }}" class="img-fluid rounded-start" alt="Defaultbild">
+                {% endif %}
+              </div>
+              <div class="col-8">
+                <div class="card-body p-2">
+                  <h6 class="card-title mb-1">
+                    <a href="{{ url_for('blog.show_post', post_id=recent.id) }}" class="text-decoration-none text-dark">
+                      {{ recent.title[:50] }}{% if recent.title|length > 50 %}...{% endif %}
+                    </a>
+                  </h6>
+                  <p class="card-subtitle small text-muted mb-0">{{ recent.created_at | format_datetime_sv('short') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {# --- Paginering av senaste inlägg --- #}
+      {% if recent_total_pages > 1 %}
+        <nav class="mt-3" aria-label="Senaste inlägg">
+          <ul class="pagination justify-content-center pagination-sm">
+            <li class="page-item {% if recent_page == 1 %}disabled{% endif %}">
+              <a class="page-link" href="{{ url_for('blog.show_post', post_id=post.id, recent_page=recent_page - 1) }}">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+
+            {% for i in range(1, recent_total_pages + 1) %}
+              <li class="page-item {% if i == recent_page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('blog.show_post', post_id=post.id, recent_page=i) }}">{{ i }}</a>
+              </li>
+            {% endfor %}
+
+            <li class="page-item {% if recent_page == recent_total_pages %}disabled{% endif %}">
+              <a class="page-link" href="{{ url_for('blog.show_post', post_id=post.id, recent_page=recent_page + 1) }}">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      {% endif %}
+
+      {# --- Länk tillbaka till bloggens startsida --- #}
+      <div class="text-end mt-4">
+        <a href="{{ url_for('blog.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+          ← Tillbaka till bloggen
+        </a>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Visningsstatistik{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4"><i class="bi bi-bar-chart"></i> Visningsstatistik</h1>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- ✅ BLOGGINLÄGG -->
+        <div class="col">
+            <div class="card h-100 shadow-sm rounded-4">
+                <div class="card-header bg-light-yellow fw-bold">
+                    <strong><i class="bi bi-journal-text"></i> Blogginlägg, {{ blog_posts|length }} inlägg visade</strong>
+                </div>
+                <div class="table-responsive">
+                    {# ✅ Hämta maxvärde för progress-bar: används för att beräkna procent #}
+                    {% set max_blog = blog_posts|map(attribute='views')|max if blog_posts else 0 %}
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr><th>Titel</th><th class="fixed-col-visningar">Visningar</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for post in blog_posts %}
+                            <tr>
+                                <td>
+                                    {# Länk till blogginlägget #}
+                                    <a href="{{ url_for('blog.show_post', post_id=post.id) }}" target="_blank">
+                                        {{ post.title }}
+                                    </a>
+                                    {# Progressbar visar procent av max_blog #}
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar" role="progressbar"
+                                            style="width: {{ (post.views / max_blog * 100) if max_blog else 0 }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fixed-col-visningar">{{ post.views or 0 }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="2" class="text-muted">Inga blogginlägg ännu.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if blog_posts %}
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td>Totalt</td>
+                                <td class="fixed-col-visningar">{{ blog_posts|sum(attribute='views') }}</td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ SIDOR -->
+        <div class="col">
+            <div class="card h-100 shadow-sm rounded-4">
+                <div class="card-header bg-light-yellow fw-bold">
+                    <strong><i class="bi bi-file-earmark"></i> Sidor, {{ pages|length }} olika sidor visade</strong>
+                </div>
+                <div class="table-responsive">
+                    {% set max_pages = pages|map(attribute='views')|max if pages else 0 %}
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr><th>Sida</th><th class="fixed-col-visningar">Visningar</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for page in pages %}
+                            {# ✅ Hämta visningsnamn och ikon dynamiskt #}
+                            {% set display_name = page_name_map.get(page.page, page.page|capitalize) %}
+                            {% set icon = {
+                                "home": "bi-house", "about": "bi-info-circle", "cv": "bi-person-vcard",
+                                "contact": "bi-envelope", "portfolio": "bi-folder2", "blog": "bi-journal-text"
+                            }.get(page.page, "bi-file-earmark") %}
+                            <tr>
+                                <td>
+                                    <i class="{{ icon }} me-1"></i>
+                                    {% if page.page in page_url_map %}
+                                        {# Om sidan finns i URL-kartan → klickbar länk #}
+                                        <a href="{{ page_url_map[page.page] }}" target="_blank">{{ display_name }}</a>
+                                    {% else %}
+                                        {{ display_name }}
+                                    {% endif %}
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar" role="progressbar"
+                                            style="width: {{ (page.views / max_pages * 100) if max_pages else 0 }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fixed-col-visningar">{{ page.views or 0 }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="2" class="text-muted">Inga sidor har visats ännu.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if pages %}
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td>Totalt</td>
+                                <td class="fixed-col-visningar">{{ pages|sum(attribute='views') }}</td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ PORTFOLIO -->
+        <div class="col">
+            <div class="card h-100 shadow-sm rounded-4">
+                <div class="card-header bg-light-yellow fw-bold">
+                    <strong><i class="bi bi-folder2-open"></i> Portfolio, {{ portfolio_data|length }} olika projekt visade</strong>
+                </div>
+                <div class="table-responsive">
+                    {% set max_portfolio = portfolio_data|map(attribute='views')|max if portfolio_data else 0 %}
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr><th>Portfolio-inlägg</th><th class="fixed-col-visningar">Visningar</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in portfolio_data %}
+                            <tr>
+                                <td>
+                                    {{ item.title }}
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar" role="progressbar"
+                                            style="width: {{ (item.views / max_portfolio * 100) if max_portfolio else 0 }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fixed-col-visningar">{{ item.views }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="2" class="text-muted">Inga portfolio-visningar ännu.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if portfolio_data %}
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td>Totalt</td>
+                                <td class="fixed-col-visningar">{{ total_portfolio_views }}</td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

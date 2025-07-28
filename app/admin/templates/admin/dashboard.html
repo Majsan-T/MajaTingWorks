@@ -10,14 +10,11 @@
   <div class="row mb-4">
     <!-- Användare -->
     <div class="col-md-4">
-      <div class="card h-100 shadow-sm rounded-4 text-bg-danger">
+      <div class="card h-100 shadow-sm rounded-4 bg-light-yellow">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title"><i class="bi bi-people"></i> Användare</h5>
           <p class="card-text display-6 fw-bold">{{ user_count }}</p>
           <div class="mt-auto">
-            <a href="{{ url_for('admin.create_user') }}" class="btn btn-outline-light btn-sm me-2 mb-2">
-              <i class="bi bi-person-fill-add"></i> Lägg till användare
-            </a>
             <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-light btn-sm">
               <i class="bi bi-person-fill-gear"></i> Hantera användare
             </a>
@@ -28,17 +25,11 @@
 
     <!-- Inlägg -->
     <div class="col-md-4">
-      <div class="card h-100 shadow-sm rounded-4 text-bg-success">
+      <div class="card h-100 shadow-sm rounded-4 bg-light-yellow">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title"><i class="bi bi-journal"></i> Inlägg</h5>
           <p class="card-text display-6 fw-bold">{{ post_count }}</p>
           <div class="mt-auto">
-            <a href="{{ url_for('blog.new_post') }}" class="btn btn-outline-light btn-sm me-2 mb-2">
-              <i class="bi bi-plus"></i> Skapa nytt inlägg
-            </a>
-            <a href="{{ url_for('admin.manage_posts') }}" class="btn btn-outline-light btn-sm mb-2">
-              <i class="bi bi-journal"></i> Hantera blogginlägg
-            </a>
             <form action="{{ url_for('admin.trigger_blog_mail') }}" method="POST" class="d-inline">
               {{ mail_form.hidden_tag() }}
               <button type="submit" class="btn btn-outline-light btn-sm mb-2">
@@ -52,7 +43,7 @@
 
     <!-- Kommentarer -->
     <div class="col-md-4">
-      <div class="card h-100 shadow-sm rounded-4 text-bg-warning">
+      <div class="card h-100 shadow-sm rounded-4 bg-light-yellow">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title"><i class="bi bi-chat-left-text"></i> Kommentarer</h5>
           <p class="card-text display-6 fw-bold">{{ comment_count }}</p>
@@ -65,7 +56,26 @@
       </div>
     </div>
   </div>
-
+  <!-- Statistik -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm rounded-4 bg-light-yellow">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title"><i class="bi bi-bar-chart"></i> Visningar</h5>
+          <p class="card-text">
+            <span class="fw-bold">{{ total_post_views }}</span> blogginlägg<br>
+            <span class="fw-bold">{{ total_page_views }}</span> sidor<br>
+            <span class="fw-bold">{{ total_portfolio_views }}</span> portfolio
+          </p>
+          <div class="mt-auto">
+            <a href="{{ url_for('admin.view_statistics') }}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-bar-chart-line"></i> Se detaljerad statistik
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for section in dashboard_sections %}
       <div class="col">

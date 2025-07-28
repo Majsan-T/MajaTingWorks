@@ -1,54 +1,54 @@
 # MajaTingWorks 🌟
 
-A professional portfolio, blog, and CV site built with Flask and MySQL — now GitHub Pages–friendly!
+En professionell portfolio, blogg och CV-sida byggd med Flask och MySQL — nu kompatibel med GitHub Pages!
 
 ---
 
-## 🚀 Features
+## 🚀 Funktioner
 
-- **Blog** – Create, edit, and publish posts using the Quill rich text editor.
-- **Comments** – Authenticated users can leave comments.
-- **Portfolio & CV** – Showcase your projects, skills, and experience.
-- **User Roles & Auth** – Admin, user, subscriber roles using Flask-Login.
-- **CaptchaFox** – Protect the contact form with bot prevention.
-- **Image Conversion** – Automatically converts uploaded images to WebP using Pillow.
-- **Email Notifications** – Notifies subscribers when a new blog post is published.
-- **MySQL + Migrations** – Powered by Flask-Migrate.
+- **Blogg** – Skapa, redigera och publicera inlägg med hjälp av den rika texteditorn Quill.
+- **Kommentarer** – Inloggade användare kan lämna kommentarer.
+- **Portfolio & CV** – Visa upp projekt, färdigheter och erfarenheter.
+- **Användarroller & Inloggning** – Roller för administratör, användare och prenumerant via Flask-Login.
+- **CaptchaFox** – Skyddar kontaktformuläret mot botar.
+- **Bildkonvertering** – Laddade bilder konverteras automatiskt till WebP med hjälp av Pillow.
+- **E-postnotifieringar** – Skickar mail till prenumeranter när ett nytt blogginlägg publiceras.
+- **MySQL + Migreringar** – Drivs av Flask-Migrate.
 
 ---
 
-## 📂 Project Structure
+## 📂 Projektstruktur
 
 ```
 MajaTingWorks/
-├── .venv/                 ← Virtual environment
+├── .venv/                 ← Virtuell miljö
 ├── app/
-│   ├── admin/             ← Admin views and logic
-│   ├── auth/              ← Login and password management
-│   ├── blog/              ← Blog logic and utilities
-│   ├── pages/             ← Static pages: home, contact, CV
-│   ├── portfolio/         ← Portfolio section
-│   ├── forms/             ← WTForms definitions
-│   ├── utils/             ← Helpers: images, sanitize, notifications
-│   ├── models.py          ← SQLAlchemy models
-│   ├── decorators.py      ← Custom decorators (e.g., admin_only)
-│   ├── extensions.py      ← Init for db, mail, login, csrf
-│   └── __init__.py        ← App factory and blueprint registration
-├── migrations/            ← Database migrations
-├── static/                ← CSS, JS, images
-├── templates/             ← Jinja2 templates
-├── tools/                 ← Dev scripts and helpers
-├── config.py              ← App config
-├── main.py                ← App entrypoint / CLI
-├── requirements.txt       ← Dependencies
-└── README.md              ← This file
+│   ├── admin/             ← Adminvyer och logik
+│   ├── auth/              ← Inloggning och lösenordshantering
+│   ├── blog/              ← Blogglogik och hjälpverktyg
+│   ├── pages/             ← Statisk sidor: startsida, kontakt, CV
+│   ├── portfolio/         ← Portfoliosektion
+│   ├── forms/             ← WTForms-formulär
+│   ├── utils/             ← Hjälpfunktioner: bilder, sanering, notiser
+│   ├── models.py          ← SQLAlchemy-modeller
+│   ├── decorators.py      ← Dekoratorer (t.ex. roles_required)
+│   ├── extensions.py      ← Initiering av db, mail, login, csrf
+│   └── __init__.py        ← Appfabrik och blueprint-registrering
+├── migrations/            ← Databasens migreringsmappar
+├── static/                ← CSS, JS, bilder
+├── templates/             ← Jinja2-mallar
+├── tools/                 ← Utvecklingsskript
+├── config.py              ← Appkonfiguration
+├── main.py                ← Startfil för appen / CLI
+├── requirements.txt       ← Beroenden
+└── README.md              ← Denna fil
 ```
 
 ---
 
-## ⚙️ Installation & Running
+## ⚙️ Installation & Körning
 
-### 🧬 Create & Activate Virtual Environment
+### 🧬 Skapa och aktivera virtuell miljö
 
 ```bash
 python3 -m venv .venv
@@ -56,15 +56,15 @@ source .venv/bin/activate     # macOS/Linux
 .venv\Scripts\activate        # Windows
 ```
 
-### 📦 Install Dependencies
+### 📦 Installera beroenden
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 🔐 Configure Environment Variables
+### 🔐 Konfigurera miljövariabler
 
-Create a `.env` file in your project root:
+Skapa en `.env`-fil i projektets rot:
 
 ```ini
 DATABASE_URL=mysql+pymysql://<user>:<password>@<host>:3306/<dbname>
@@ -78,41 +78,56 @@ CAPTCHAFOX_SITE_KEY=sk_...
 CAPTCHAFOX_SECRET_KEY=ok_...
 ```
 
-### 🧱 Initialize Database
+### 🧱 Initiera databasen
 
 ```bash
 flask db init
-flask db migrate -m "Initial migration"
+flask db migrate -m "Första migreringen"
 flask db upgrade
 ```
 
-### ▶️ Run the App
+### ▶️ Starta appen
 
 ```bash
 flask run
 ```
 
-Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
+Besök [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ---
 
-## 🧪 Usage Overview
+## 🧪 Användningsöversikt
 
-| Route              | Description                  |
-|--------------------|------------------------------|
-| `/blog/`           | View blog posts              |
-| `/blog/new_post`   | Create new post (admin only) |
-| `/blog/post/<id>`  | View specific post           |
-| `/cv`              | CV section                   |
-| `/portfolio`       | Portfolio section            |
-| `/admin/`          | Admin panel                  |
+| Route             | Beskrivning                      |
+| ----------------- | -------------------------------- |
+| `/blog/`          | Visa blogginlägg                 |
+| `/blog/new_post`  | Skapa nytt inlägg (endast admin) |
+| `/blog/post/<id>` | Visa specifikt inlägg            |
+| `/cv`             | CV-sektion                       |
+| `/portfolio`      | Portfolio-sektion                |
+| `/admin/`         | Adminpanel                       |
 
 ---
 
-## 🔧 Technologies
+## 🔧 Teknik
+
+- **Besöksräknare:**
+
+  - Blogg- och portfolioposter spårar unika visningar per session (via cookies/sessions).
+  - Inkluderar totalräknare för statiska sidor som `om`, `cv` m.fl.
+  - Sidor som `/portfolio/<id>` och `/blog/post/<id>` uppdaterar databasen när de besöks – men endast en gång per session.
+
+- **Förbättrad användarhantering:**
+
+  - Token-baserad användarskapande (t.ex. via `create_user_token(email)`).
+  - Automatisk lösenordssättning via e-postlänk.
+  - Stöd för roller (admin, användare, prenumerant).
+  - Tidsbegränsade tokens (via `itsdangerous`) med säkert salt.
 
 - **Python 3.11+**
-- **Flask** with:
+
+- **Flask** med:
+
   - Flask-WTF
   - Flask-Login
   - Flask-Migrate
@@ -120,10 +135,14 @@ Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
   - Flask-Bootstrap
   - Flask-CaptchaFox
   - Flask-Babel
+
 - **SQLAlchemy** + MySQL (PyMySQL)
-- **Pillow** for image handling
-- **itsdangerous** for secure token workflows
-- **GitHub Pages–friendly** layout
+
+- **Pillow** för bildhantering
+
+- **itsdangerous** för säkra tokenflöden
+
+- **GitHub Pages–kompatibel** layout
 
 ---
 
@@ -171,53 +190,53 @@ Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ---
 
-## 🚜 CLI Commands
+## 🚜 Kommandon via terminalen (CLI)
 
 ### ✉️ `send-blog-mails`
 
-Sends email notifications to subscribers when a blog post's `created_at` timestamp has passed and the post hasn't been emailed yet.
+Skickar e-postnotiser till prenumeranter när ett blogginläggs `created_at`-tidpunkt har passerat och inlägget ännu inte har mejlats ut.
 
-#### ✅ Usage:
+#### ✅ Användning:
 
 ```bash
 flask send-blog-mails
 ```
 
-> Each post is marked as sent by setting `email_sent = True`.
+> Varje inlägg markeras som skickat genom att sätta `email_sent = True`.
 
 ---
 
-## 📆 Cron Jobs
+## 📆 Schemaläggning (Cron Jobs)
 
-Want to send blog emails automatically every day? Add the following to your crontab to run the command at 9:00 PM daily:
+Vill du skicka blogginlägg automatiskt varje dag? Lägg till följande rad i din crontab för att köra kommandot kl. 21:00 varje dag:
 
 ```cron
-0 21 * * * cd /home/your/path/to/root-folder && FLASK_APP=main.py FLASK_CLI=true flask send-blog-mails >> logs/send_blog_mails.log 2>&1
+0 21 * * * cd /home/din/sökväg/till/root-mapp && FLASK_APP=main.py FLASK_CLI=true flask send-blog-mails >> logs/send_blog_mails.log 2>&1
 ```
 
-📌 **Prerequisites:**
+📌 **Förutsättningar:**
 
-- Flask CLI must work in your environment.
-- A `logs/` directory should exist in the project root.
-- Environment variables must be accessible via `.env` or system config.
+- Flask CLI måste fungera i din miljö.
+- En `logs/`-mapp måste finnas i projektets rot.
+- Miljövariabler måste vara tillgängliga via `.env` eller systeminställningar.
 
-> Edit your crontab with `crontab -e`.  
-> In `vim`, press `Esc`, type `:wq`, then press Enter to save and exit.
+> Redigera din crontab med `crontab -e`.  
+> I `vim`, tryck `Esc`, skriv `:wq`, och tryck Enter för att spara och avsluta.
 
 ---
 
-## Development Tools
+## 🛠️ Utvecklingsverktyg
 
-### 🧹 Clean the Project (Windows Only)
+### 🧹 Rensa projektet (endast Windows)
 
-The `tools/clean-project.ps1` script removes temporary files such as:
+Scriptet `tools/clean-project.ps1` tar bort tillfälliga filer, såsom:
 
-- Python cache files (`*.pyc`, `__pycache__`)
-- Swap/backup files (`*.bak`, `*~`, etc.)
-- Unused `migrations/` folders (without `versions/`)
-- Test or temporary images (`test`, `temp`, `debug` in `static/`)
+- Python-cachefiler (`*.pyc`, `__pycache__`)
+- Swap-/backupfiler (`*.bak`, `*~`, etc.)
+- Oanvända `migrations/`-mappar (utan `versions/`)
+- Test- eller tillfälliga bilder (`test`, `temp`, `debug` i `static/`)
 
-Creates a timestamped log file, e.g., `tools/clean_log_2025-07-07_1340.txt`
+Skapar en loggfil med tidsstämpel, t.ex. `tools/clean_log_2025-07-07_1340.txt`
 
 ```powershell
 ./tools/clean-project.ps1
@@ -225,7 +244,7 @@ Creates a timestamped log file, e.g., `tools/clean_log_2025-07-07_1340.txt`
 
 ### 📄 `tools/generate_docs.py`
 
-Generates docs and quick guides for common Flask tasks. Outputs `.txt` and `.md` files to a `docs/` directory.
+Genererar dokumentation och snabbguider för vanliga Flask-uppgifter. Skapar `.txt` och `.md`-filer i `docs/`-mappen.
 
 ```bash
 python tools/generate_docs.py
@@ -233,7 +252,7 @@ python tools/generate_docs.py
 
 ### 🤩 `tools/inspect_models.py`
 
-Prints all database tables and their columns. Helpful for checking schema consistency and debugging.
+Skriver ut alla databasens tabeller och deras kolumner. Användbart för att kontrollera databasstruktur och felsökning.
 
 ```bash
 python tools/inspect_models.py
@@ -241,28 +260,29 @@ python tools/inspect_models.py
 
 ---
 
-## 🤝 Contributing
+## 🤝 Bidra till projektet
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to your branch: `git push origin feature/your-feature`
-5. Open a Pull Request
-
----
-
-## 🗒️ To-do
-
-1. Unsubscribe as user/subscriber – Done
-2. Refine date/time handling for `posted_at` and `updated_at` – Done
-3. Localization support
+1. Forka detta repo  
+2. Skapa en ny feature-branch: `git checkout -b feature/din-funktion`  
+3. Lägg till dina ändringar: `git commit -m 'Lagt till ny funktion'`  
+4. Skicka till ditt repo: `git push origin feature/din-funktion`  
+5. Skapa en Pull Request
 
 ---
 
-## 📄 License
+## 🗒️ Att göra
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+1. Avregistrera sig som användare/prenumerant – Klart  
+2. Förbättrad hantering av datum/tid för `posted_at` och `updated_at` – Klart  
+3. Stöd för lokaliserad översättning (i18n)
 
 ---
 
-Feel free to reach out if you have any questions or suggestions!
+## 📄 Licens
+
+Detta projekt är licensierat under MIT-licensen. Se [LICENSE](LICENSE) för mer information.
+
+---
+
+Hör gärna av dig om du har frågor eller förslag!
+

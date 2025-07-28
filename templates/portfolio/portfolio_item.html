@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
+
+{% block title %}{{ item.title }}{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
   <div class="row">
     <!-- Vänster kolumn -->
     <div class="col-md-8">
-      <h1>{{ item.title }}</h1>
-      <p class="text-muted">
+      <h1 class="mb-3">{{ item.title }}</h1>
+      <p class="text-muted mb-4">
         <strong>Kategori:</strong>
         {% if item.category_obj %}
           {{ item.category_obj.title }}
@@ -14,95 +17,89 @@
         {% endif %}
       </p>
 
-      {# Inläggsbild eller kategori-bild eller fallback #}
-      {% set fallback_image = 'assets/img/default.jpg' %}
+      {# Bild: använd inläggsbild, annars kategori-bild, annars fallback #}
+      {% set fallback_image = 'assets/img/default_portfolio.webp' %}
       {% set category_image = item.category_obj.image if item.category_obj and item.category_obj.image else fallback_image %}
       {% if item.image %}
-        <div class="overflow-hidden rounded mb-4" style="height: 400px;">
+        <div class="overflow-hidden rounded mb-4" style="max-height: 400px;">
           <img
             src="{{ url_for('static', filename='uploads/portfolio/' ~ item.image) }}"
-            class="w-100 h-100 object-fit-cover"
+            class="w-100 object-fit-cover"
             alt="{{ item.title }}"
           >
         </div>
       {% else %}
-        <div class="overflow-hidden rounded mb-4" style="height: 400px;">
+        <div class="overflow-hidden rounded mb-4" style="max-height: 400px;">
           <img
             src="{{ url_for('static', filename=category_image) }}"
-            class="w-100 h-100 object-fit-cover"
+            class="w-100 object-fit-cover"
             alt="{{ item.category_obj.title if item.category_obj else 'Ingen kategori' }}"
           >
         </div>
       {% endif %}
 
-      <div class="content mb-5">
+      <div class="content mb-4">
         {{ item.description | safe }}
       </div>
 
-      {% if current_user.is_authenticated and current_user.role == 'admin' %}
-      <a href="{{ url_for('portfolio.edit_portfolio', item_id=item.id) }}" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-pencil-fill"></i> Redigera</a>
-      <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Radera</button>
+      <!-- Navigering: Föregående / Nästa -->
+      <div class="d-flex justify-content-between my-4">
+        {% if prev_item %}
+          <a href="{{ url_for('portfolio.show_portfolio_item', item_id=prev_item.id) }}"
+             class="btn btn-outline-secondary btn-sm">
+            ← {{ prev_item.title[:30] }}{% if prev_item.title|length>30 %}…{% endif %}
+          </a>
+        {% else %}
+          <span></span>
+        {% endif %}
 
-      <!-- Modal -->
-      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-danger text-white">
-              <h5 class="modal-title" id="confirmDeleteModalLabel">Bekräfta borttagning</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Stäng"></button>
-            </div>
-            <div class="modal-body">Är du säker på att du vill ta bort detta inlägg?</div>
-            <div class="modal-footer">
-              <form
-                method="POST"
-                action="{{ url_for('portfolio.delete_portfolio', item_id=item.id) }}"
-                class="d-inline"
-              >
-                {{ delete_form.hidden_tag() }}
-                <button
-                  type="submit"
-                  class="btn btn-danger btn-sm"
-                >
-                  Ja, ta bort
-                </button>
-              </form>
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                data-bs-dismiss="modal"
-              >
-                Avbryt
-              </button>
-            </div>
-          </div>
-        </div>
+        {% if next_item %}
+          <a href="{{ url_for('portfolio.show_portfolio_item', item_id=next_item.id) }}"
+             class="btn btn-outline-secondary btn-sm">
+            {{ next_item.title[:30] }}{% if next_item.title|length>30 %}…{% endif %} →
+          </a>
+        {% endif %}
       </div>
-      {% endif %}
-      <p><a href="{{ url_for('portfolio.index') }}" class="btn btn-primary btn-sm mt-4">← Tillbaka till portfolio</a></p>
+
+      <a href="{{ url_for('portfolio.index') }}" class="btn btn-outline-primary btn-sm">
+        ← Tillbaka till portfolio
+      </a>
     </div>
 
-    <!-- Höger kolumn -->
-    <div class="col-md-4">
-      <h5 class="mb-4">Senaste projekt</h5>
+    <!-- Höger kolumn: Senaste projekt -->
+    <div class="col-lg-4">
+      <h5 class="mb-3">Senaste projekt</h5>
       <div class="d-flex flex-column gap-3">
-        {% for recent in recent_posts %}
-        <div class="card shadow-sm">
+        {% for post in posts %}
+        <div class="card shadow-sm
+                    {% if post.id == item.id %}border-primary bg-light{% endif %}">
           <div class="row g-0">
             <div class="col-4">
-              {% set recent_fallback = 'assets/img/default.jpg' %}
-              {% set recent_image = recent.image if recent.image else recent_fallback %}
-              <div class="overflow-hidden" style="height: 100px;">
-                <img src="{{ url_for('static', filename='uploads/portfolio/' ~ recent.image) if recent.image else url_for('static', filename=recent_fallback) }}"
-                     class="object-fit-cover w-100 h-100" alt="Thumbnail">
-              </div>
+              {% set fallback = 'assets/img/default_portfolio.webp' %}
+              <img
+                src="{{ url_for('static', filename='uploads/portfolio/' ~ post.image) if post.image and post.image.strip() else url_for('static', filename=fallback) }}"
+                onerror="this.onerror=null; this.src='{{ url_for('static', filename=fallback) }}';"
+                class="object-fit-cover w-100"
+                style="height:100px"
+                alt="{{ post.title }}"
+              >
             </div>
             <div class="col-8">
               <div class="card-body p-2">
-                <h6 class="card-title mb-1">
-                  <a href="{{ url_for('portfolio.item', item_id=recent.id) }}" class="text-decoration-none text-dark">
-                    {{ recent.title[:50] }}{% if recent.title|length > 50 %}...{% endif %}
+                {% if post.id == item.id %}
+                  <h6 class="card-title mb-1 text-primary">
+                    {{ post.title[:50] }}{% if post.title|length>50 %}…{% endif %}
+                  </h6>
+                {% else %}
+                  <a
+                    href="{{ url_for('portfolio.show_portfolio_item', item_id=post.id) }}"
+                    class="text-decoration-none text-dark"
+                  >
+                    <h6 class="card-title mb-1">
+                      {{ post.title[:50] }}{% if post.title|length>50 %}…{% endif %}
+                    </h6>
                   </a>
-                </h6>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -110,25 +107,28 @@
         {% endfor %}
       </div>
 
-      {% if recent_total_pages > 1 %}
-      <nav class="mt-3" aria-label="Senaste projekt">
-        <ul class="pagination justify-content-center pagination-sm">
-          <li class="page-item {% if recent_page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('portfolio.item', item_id=item.id, recent_page=recent_page - 1) }}">
-              <i class="bi bi-chevron-left"></i>
-            </a>
+      {% if total_pages > 1 %}
+      <nav aria-label="Sidor">
+        <ul class="pagination justify-content-center mt-3">
+          <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('portfolio.show_portfolio_item', item_id=item.id, page=page-1) }}"
+            ><i class="bi bi-chevron-left"></i></a>
           </li>
-
-          {% for i in range(1, recent_total_pages + 1) %}
-            <li class="page-item {% if i == recent_page %}active{% endif %}">
-              <a class="page-link" href="{{ url_for('portfolio.item', item_id=item.id, recent_page=i) }}">{{ i }}</a>
+          {% for i in range(1, total_pages + 1) %}
+            <li class="page-item {% if page == i %}active{% endif %}">
+              <a
+                class="page-link"
+                href="{{ url_for('portfolio.show_portfolio_item', item_id=item.id, page=i) }}"
+              >{{ i }}</a>
             </li>
           {% endfor %}
-
-          <li class="page-item {% if recent_page == recent_total_pages %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('portfolio.item', item_id=item.id, recent_page=recent_page + 1) }}">
-              <i class="bi bi-chevron-right"></i>
-            </a>
+          <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('portfolio.show_portfolio_item', item_id=item.id, page=page+1) }}"
+            ><i class="bi bi-chevron-right"></i></a>
           </li>
         </ul>
       </nav>

@@ -1,7 +1,12 @@
+<!-- templates/pages/about.html -->
 {% extends "base.html" %}
 {% block title %}Om sidan{% endblock %}
 
 {% block content %}
+
+{# =====================================================
+   ✅ HERO-SEKTION: INTRODUKTION
+   ===================================================== #}
 {% set bg_class = "about-hero" %}
 {% set title = "Om sidan" %}
 {% set subtitle = "Kort om mig och sidan du besöker" %}
@@ -9,82 +14,102 @@
 
 <div class="container mt-5">
 
+  {# =====================================================
+     ✅ HUVUDPRESENTATION: OM MIG OCH SAJTEN
+     ===================================================== #}
   <div class="card shadow-sm mb-4">
     <div class="card-body">
-      <p class="card-text">
-        Välkommen hit! </p>
-      <p>Jag heter Maria, och på den här sidan delar jag med mig av mina tankar och projekt inom en rad olika områden, från <b>teknik, AI och programmering</b> till <b>vård, livsstil och samhälle</b>.
+      <p class="card-text">Välkommen hit!</p>
+      <p>Jag heter Maria, och på den här sidan delar jag med mig av mina tankar och projekt inom <b>teknik, AI, programmering</b> samt <b>vård, livsstil och samhälle</b>.</p>
+      <p>
+        Jag brukar beskriva mig som en <b>"multipotentialite"</b> – en nyfiken problemlösare som älskar att dyka djupt in i nya intressen, lära sig snabbt och bidra med mina kunskaper.
       </p>
       <p>
-        Jag brukar beskriva mig som en <b>"multipotentialite"</b> – en nyfiken problemlösare som älskar att dyka djupt in i nya intressen, lära sig snabbt och bidra med mina kunskaper. Jag trivs med att utforska och koppla samman olika discipliner, vilket ofta resulterar i nya perspektiv och innovativa lösningar.
+        Min breda bakgrund – från projektör av järnvägssignalsystem till barnmorska och vidare till IT – har gett mig en unik förmåga att se mönster och samband. Min tekniska resa började på 80-talet med Commodore och fortsatte med webbutveckling och Python-projekt.
       </p>
       <p>
-        Min breda bakgrund – från sju år som projektör av järnvägssignalsystem via mer än tio år som barnmorska inom förlossningsvård och ungdomshälsa till en långvarig passion för IT – har gett mig en unik förmåga att se mönster och samband där andra kanske missar dem. Min tekniska resa började redan på 80-talet med Commodore och har fortsatt med webbutveckling (HTML, Drupal, WordPress) och programmering i Python, bland annat genom att bygga en Raspberry Pi-kamera.
-      </p>
-      <p>
-        Utöver teknik brinner jag för <b>skapande i alla dess former</b>: att skriva, sticka, virka, sy, snickra, odla, släktforska, baka, resa, vandra och fota. Jag är van vid att vara självlärd och självgående, men jag tror starkt på <b>samarbete, kunskapsutbyte och gemensamt lärande</b>. Nyfikenheten är min drivkraft.
+        Utöver teknik brinner jag för <b>skapande i alla dess former</b>: att skriva, sticka, virka, sy, snickra, odla, släktforska, baka, resa, vandra och fota.
       </p>
       <p class="card-text">
-        Denna sajt är byggd med <i class="bi bi-heart-fill text-danger"></i> med hjälp av <b>Python, Flask, Bootstrap och MySQL</b>. Och ja, en hel del kaffe <i class="bi bi-cup-hot-fill text-brown"></i> och envishet också!
+        Denna sajt är byggd med <i class="bi bi-heart-fill text-danger"></i> med <b>Python, Flask, Bootstrap och MySQL</b> – och en hel del kaffe <i class="bi bi-cup-hot-fill text-brown"></i> och envishet!
       </p>
     </div>
   </div>
 
+  {# =====================================================
+     ✅ NAVIGATIONSKORT: SNABBLÄNKAR TILL ANDRA SIDOR
+     ===================================================== #}
   <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+    {# --- Blogg --- #}
     <div class="col">
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title">
-              <i class="bi bi-journal-text me-2"></i>
-              <a class="nav-link {% if request.endpoint == 'blog.index' %}active fw-semibold{% endif %}" href="{{ url_for('blog.index') }}" style="display: inline-block;">
-                  Blogg
-              </a>
+            <i class="bi bi-journal-text me-2"></i>
+            <a class="nav-link {% if request.page == 'blog.index' %}active fw-semibold{% endif %}"
+               href="{{ url_for('blog.index') }}" style="display: inline-block;">
+              Blogg
+            </a>
           </h5>
-          <p class="card-text">Här delar jag med mig av <b>tankar, idéer och det jag jobbar med just nu</b>. Det kan vara reflektioner, tekniska lösningar eller nya upptäckter från vardag och projekt. Välkommen att utforska!</p>
+          <p class="card-text">Här delar jag <b>tankar, idéer och projekt</b>. Tekniska lösningar, reflektioner och upptäckter.</p>
         </div>
       </div>
     </div>
+
+    {# --- Portfolio --- #}
     <div class="col">
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title">
-              <i class="bi bi-folder2 me-2"></i>
-              <a class="nav-link {% if request.endpoint == 'portfolio.index' %}active fw-semibold{% endif %}" href="{{ url_for('portfolio.index') }}" style="display: inline-block;">
-                  Portfolio
-              </a>
+            <i class="bi bi-folder2 me-2"></i>
+            <a class="nav-link {% if request.page == 'portfolio.index' %}active fw-semibold{% endif %}"
+               href="{{ url_for('portfolio.index') }}" style="display: inline-block;">
+              Portfolio
+            </a>
           </h5>
-          <p class="card-text">En samling av mina projekt – från <b>kod och teknik till kreativt skapande</b>. Min portfolio visar bredden i mitt arbete och min utveckling. För senaste nytt, kika gärna in i bloggen!</p>
+          <p class="card-text">En samling <b>projekt inom kod och kreativt skapande</b>. Här syns bredden i mitt arbete.</p>
         </div>
       </div>
     </div>
+
+    {# --- CV --- #}
     <div class="col">
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title">
-              <i class="bi bi-person-vcard me-2"></i>
-              <a class="nav-link {% if request.endpoint == 'pages.cv' %}active fw-semibold{% endif %}" href="{{ url_for('pages.cv') }}" style="display: inline-block;">
-                  Curriculum vitae
-              </a>
+            <i class="bi bi-person-vcard me-2"></i>
+            <a class="nav-link {% if request.page == 'pages.cv' %}active fw-semibold{% endif %}"
+               href="{{ url_for('pages.cv') }}" style="display: inline-block;">
+              Curriculum vitae
+            </a>
           </h5>
-          <p class="card-text">Få en överblick över min <b>yrkesbakgrund, utbildning och färdigheter</b>. Mitt CV beskriver min professionella resa, från vård till IT, och hur jag kombinerar dessa världar.</p>
+          <p class="card-text">En översikt av <b>yrkesbakgrund och färdigheter</b>. Från vård till IT – hur jag kombinerar dem.</p>
         </div>
       </div>
     </div>
+
+    {# --- Om mig (aktuell sida) --- #}
     <div class="col">
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title"><i class="bi bi-person-heart me-2"></i>Om mig</h5>
-          <p class="card-text">Det är här du är nu! <i class="bi bi-emoji-smile-fill text-warning"></i> Här kan du lära känna mig lite bättre – om min bakgrund, mina intressen och <b>vad som driver mig</b>.</p>
+          <p class="card-text">Här är du nu! <i class="bi bi-emoji-smile-fill text-warning"></i> Lär känna mig och <b>vad som driver mig</b>.</p>
         </div>
       </div>
     </div>
   </div>
 
+  {# =====================================================
+     ✅ AVSLUTANDE HÄLSNING
+     ===================================================== #}
   <div class="text-center mt-5">
-    <p class="fs-5">Jag hoppas du trivs här och att du hittar något som inspirerar dig!</p>
+    <p class="fs-5">Jag hoppas du trivs här och hittar något som inspirerar dig!</p>
     <p><i class="bi bi-stars fs-3 text-primary"></i></p>
   </div>
 
+  {# =====================================================
+     ✅ KONTAKTSEKTION
+     ===================================================== #}
   <div class="card shadow-sm h-100 mt-4">
     <div class="card-body text-center">
       <h5 class="card-title text-primary">Vill du kontakta mig?</h5>
@@ -93,27 +118,35 @@
       </a>
     </div>
   </div>
+
+  {# =====================================================
+     ✅ SOCIALA MEDIER
+     ===================================================== #}
   <div class="text-center mt-5 py-4 mt-5 section-wrapper">
     <h5>Följ mig</h5>
     <div class="social-icons mt-3">
-      <a href="https://facebook.com/maria.tingvall" target="_blank" class="btn btn-outline-primary btn-floating m-1" aria-label="Facebook">
+      <a href="https://facebook.com/maria.tingvall" target="_blank"
+         class="btn btn-outline-primary btn-floating m-1" aria-label="Facebook">
         <i class="bi bi-facebook"></i>
       </a>
-      <a href="https://instagram.com/edvandoli" target="_blank" class="btn btn-outline-primary btn-floating m-1" aria-label="Instagram">
+      <a href="https://instagram.com/edvandoli" target="_blank"
+         class="btn btn-outline-primary btn-floating m-1" aria-label="Instagram">
         <i class="bi bi-instagram"></i>
       </a>
-      <a href="https://linkedin.com/in/maria-tingvall" target="_blank" class="btn btn-outline-primary btn-floating m-1" aria-label="LinkedIn">
+      <a href="https://linkedin.com/in/maria-tingvall" target="_blank"
+         class="btn btn-outline-primary btn-floating m-1" aria-label="LinkedIn">
         <i class="bi bi-linkedin"></i>
       </a>
-      <a href="https://github.com/Majsan-T" target="_blank" class="btn btn-outline-primary btn-floating m-1" aria-label="GitHub">
+      <a href="https://github.com/Majsan-T" target="_blank"
+         class="btn btn-outline-primary btn-floating m-1" aria-label="GitHub">
         <i class="bi bi-github"></i>
       </a>
-      <a href="https://maja.tingvall.nu" target="_blank" class="btn btn-outline-primary btn-floating m-1" aria-label="Personligt">
+      <a href="https://maja.tingvall.nu" target="_blank"
+         class="btn btn-outline-primary btn-floating m-1" aria-label="Personligt">
         <i class="bi bi-globe2"></i>
       </a>
     </div>
   </div>
-
 </div>
 
 {% endblock %}

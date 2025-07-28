@@ -3,7 +3,8 @@ from app.models import BlogPost, db
 from app.blog.utils import notify_subscribers
 
 def check_and_notify_posts():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
     posts_to_notify = BlogPost.query.filter(
         BlogPost.created_at <= now,
         BlogPost.notified == False
