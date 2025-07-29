@@ -1,7 +1,7 @@
 # app/blog/utils.py
 from flask_mail import Message
 from flask import current_app, url_for
-from app.models import User, BlogPost, db
+from app.models import User, BlogPost, db, Role
 from app.extensions import mail
 from datetime import datetime, timezone
 
@@ -42,7 +42,7 @@ def notify_subscribers(post):
     """
     from app.extensions import mail  # ✅ För att undvika cirkulär import
 
-    subscribers = User.query.filter_by(role="subscriber").all()
+    subscribers = User.query.join(User.roles).filter(Role.name == "subscriber").all()
     if not subscribers:
         return
 

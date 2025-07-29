@@ -20,7 +20,7 @@ from app.blog.utils import notify_subscribers
 from app.decorators import roles_required
 from app.extensions import db, csrf, mail
 from app.forms import BlogPostForm, CommentForm, DeleteForm, CategorySelectForm, CategoryFilterForm, BlogCategoryForm
-from app.models import BlogPost, Comment, User, BlogCategory
+from app.models import BlogPost, Comment, User, BlogCategory, Role
 from app.utils.time import get_local_now, DEFAULT_TZ
 from app.utils.image_utils import save_image, delete_existing_image, _handle_quill_upload
 from app.utils.helpers import sanitize_html
@@ -86,7 +86,7 @@ def send_new_post_notification(post):
     """
     Skicka e-postnotis till prenumeranter när nytt inlägg publiceras.
     """
-    subscribers = User.query.filter_by(role='subscriber').all()
+    subscribers = User.query.join(User.roles).filter(Role.name == 'subscriber').all()
     for subscriber in subscribers:
         msg = Message(
             subject=f"Nytt blogginlägg: {post.title}",
