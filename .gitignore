@@ -28,3 +28,19 @@ Thumbs.db
 /docs/
 Flask-Migrate-Guide.txt
 Flask-Migrate-Rollback.txt
+
+# Bloggkategoribilder
+static/blog_category_images/*
+!static/blog_category_images/.gitkeep
+
+# Portfoliokategoribilder
+static/portfolio_category_images/*
+!static/portfolio_category_images/.gitkeep
+
+# Blogguploads
+static/uploads/blog/*
+!static/uploads/blog/.gitkeep
+
+# Portfoliouploads
+static/uploads/portfolio/*
+!static/uploads/portfolio/.gitkeep
