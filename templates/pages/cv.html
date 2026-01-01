@@ -1,6 +1,12 @@
 <!-- templates/pages/cv.html -->
 
 {% extends "base.html" %}
+
+{% block styles %}
+  {{ super() }}
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
 {% block title %}Min CV{% endblock %}
 {% block content %}
 
@@ -32,96 +38,42 @@
         <!-- Main Content -->
         <div class="col-lg-9 order-first order-lg-last">
             <form method="POST">
-              {{ form.hidden_tag() }}
+                {{ form.hidden_tag() }}
 
-              {% for section, label, icon in [
-                ('about', 'Om mig', 'bi-person-circle'),
-                ('experience', 'Erfarenhet', 'bi-briefcase'),
-                ('education', 'Utbildning', 'bi-mortarboard'),
-                ('awards', 'Certifieringar', 'bi-award'),
-                ('skills', 'Kunskaper', 'bi-book'),
-                ('interests', 'Intressen', 'bi-flower1')
-              ] %}
-              <div id="{{ section }}" class="card bg-light-pink mb-4 animate-fade hover-effect">
-                <div class="card-body">
-                    <h3 class="subheading"><i class="bi {{ icon }} me-2"></i>{{ label }}</h3>
+                {% for section, label, icon in [
+                  ('about', 'Om mig', 'bi-person-circle'),
+                  ('experience', 'Erfarenhet', 'bi-briefcase'),
+                  ('education', 'Utbildning', 'bi-mortarboard'),
+                  ('awards', 'Certifieringar', 'bi-award'),
+                  ('skills', 'Kunskaper', 'bi-book'),
+                  ('interests', 'Intressen', 'bi-flower1')
+                ] %}
+                <div id="{{ section }}" class="card bg-light-pink mb-4 animate-fade hover-effect">
+                    <div class="card-body">
+                        <h3 class="subheading"><i class="bi {{ icon }} me-2"></i>{{ label }}</h3>
 
-                    {% if current_user.is_authenticated and current_user.is_authenticated and current_user.has_role('admin') %}
-                      <input type="hidden" id="input-{{ section }}" name="{{ section }}" value="{{ content[section]|e }}">
-                      <div class="form-control mb-2 p-0">
-                        <div id="editor-{{ section }}" style="height: 200px;"></div>
-                      </div>
-                    {% else %}
-                      <div class="post-content mb-2">{{ content[section]|safe }}</div>
-                    {% endif %}
+                        {% if current_user.is_authenticated and current_user.is_authenticated and current_user.has_role('admin') %}
+                            <input type="hidden" id="input-{{ section }}" name="{{ section }}" value="{{ content[section]|e }}">
+                                <div class="form-control mb-2 p-0">
+                                    <div id="editor-{{ section }}"
+                                       class="quill-editor"
+                                       data-input="#input-{{ section }}"
+                                       data-upload="/cv/upload"
+                                       style="height: 200px;"></div>
+                                </div>
+                        {% else %}
+                          <div class="post-content mb-2">{{ content[section]|safe }}</div>
+                        {% endif %}
+                    </div>
                 </div>
-              </div>
-              {% endfor %}
+                {% endfor %}
 
-              {% if current_user.is_authenticated and current_user.is_authenticated and current_user.has_role('admin') %}
-                <div class="text-end mb-4">
-                    {{ form.submit(class="btn btn-success") }}
-                </div>
-              {% endif %}
+                {% if current_user.is_authenticated and current_user.is_authenticated and current_user.has_role('admin') %}
+                  <div class="text-end mb-4">
+                      {{ form.submit(class="btn btn-success") }}
+                  </div>
+                {% endif %}
             </form>
-
-            {% if current_user.is_authenticated and current_user.is_authenticated and current_user.has_role('admin') %}
-            <script>
-              document.addEventListener("DOMContentLoaded", function () {
-                const sections = ['about', 'experience', 'education', 'awards', 'skills', 'interests'];
-                const quills = {};
-
-                sections.forEach(function (section) {
-                  const editor = new Quill('#editor-' + section, {
-                    theme: 'snow',
-                    placeholder: 'Skriv här...',
-                    modules: {
-                      toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'list': 'bullet' }],
-                        ['link'],
-                        ['code'],
-                        ['clean']
-                      ]
-                    }
-                  });
-
-                  const hidden = document.getElementById('input-' + section);
-                  if (hidden && hidden.value) {
-                    // Skapa ett temporärt DOM-element
-                    const tempDiv = document.createElement('div');
-
-                    // Sätt det *escapade* innehållet från hidden.value som innerHTML
-                    // Detta kommer att få webbläsaren att avkoda HTML-entiteterna (&quot;, &amp;amp; etc.)
-                    tempDiv.innerHTML = hidden.value;
-
-                    // NU är det kritiska steget:
-                    // Använd tempDiv.innerHTML igen. Detta kommer att ge dig den avkodade HTML-strängen
-                    // med de riktiga citationstecknen och ampersand-tecknen, OCH bevara HTML-strukturen.
-                    // Till exempel: <a href="https://...">curious & innovative</a>
-                    const decodedAndPreservedHtml = tempDiv.innerHTML;
-
-                    // Klistra in den avkodade HTML-strukturen i Quill
-                    editor.clipboard.dangerouslyPasteHTML(decodedAndPreservedHtml);
-                  }
-
-                  quills[section] = editor;
-                });
-
-                const form = document.querySelector('form');
-                if (form) {
-                  form.addEventListener('submit', function () {
-                    sections.forEach(function (section) {
-                      const hidden = document.getElementById('input-' + section);
-                      if (hidden && quills[section]) {
-                        hidden.value = quills[section].root.innerHTML;
-                      }
-                    });
-                  });
-                }
-              });
-            </script>
-            {% endif %}
         </div>
     </div>
 </section>
@@ -136,4 +88,10 @@
     </button>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script src="{{ url_for('static', filename='js/quill-editor.js') }}"></script>
 {% endblock %}

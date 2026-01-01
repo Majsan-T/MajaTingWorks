@@ -25,8 +25,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 toolbar: {
                     container: [
                         ["bold", "italic", "underline"],
-                        [{ list: "bullet" }],
-                        ["link", "image", "code"],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image', 'video'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'font': [] }],
+                        [{ 'align': [] }],
                         ["clean"]
                     ],
                     handlers: {
