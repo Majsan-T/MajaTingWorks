@@ -1,18 +1,31 @@
 # app/pages/pages.py
 from datetime import datetime
-from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app, Response, session
+# app/pages/pages.py
+from datetime import datetime
+
+import requests
+from flask import (
+    Blueprint, render_template, flash, redirect, url_for,
+    request, current_app, Response
+)
+from flask_login import current_user
 from flask_mail import Message
-from flask_login import login_required, current_user
+
 from app.extensions import mail, db
 from app.forms import ContactForm
 from app.forms.shared_forms import CvEditForm
-from app.models import CVContent, BlogPost, PortfolioItem, Category, db, PageView, BlogCategory
-
+from app.models import (
+    CVContent, BlogPost, PortfolioItem, Category, BlogCategory
+)
 from app.utils.helpers import log_info
 from app.utils.views import increment_post_views, increment_page_view
-import requests
 
 pages_bp = Blueprint("pages", __name__)
+
+def user_label() -> str:
+    if getattr(current_user, "is_authenticated", False):
+        return getattr(current_user, "email", "logged-in-user")
+    return "anonymous"
 
 
 def verify_captchafox(response_token):
@@ -46,7 +59,8 @@ def about():
 @pages_bp.route("/contact", methods=["GET", "POST"])
 def contact():
     increment_post_views("contact")
-    current_app.logger.info(f"Route /admin/ kördes av {current_user.email}")
+    user_email = getattr(current_user, "email", "anonymous")
+    current_app.logger.info(f"Route /cv kördes av {user_label()}")
     form = ContactForm()
     site_key = current_app.config.get("CAPTCHAFOX_SITE_KEY")
 
@@ -76,7 +90,8 @@ def contact():
 
 @pages_bp.route("/cv", methods=["GET", "POST"])
 def cv():
-    current_app.logger.info(f"Route /admin/ kördes av {current_user.email}")
+    user_email = getattr(current_user, "email", "anonymous")
+    current_app.logger.info(f"Route /cv kördes av {user_email}")
     form = CvEditForm()
     increment_post_views("cv")
 

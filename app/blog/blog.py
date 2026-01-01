@@ -292,17 +292,24 @@ def new_post():
             author=current_user
         )
 
+        db.session.add(new_post)
         try:
-            db.session.add(new_post)
             db.session.commit()
-            notify_subscribers(new_post)
-            flash("Nytt inlägg har publicerats.", "success")
-            return redirect(url_for("blog.index"))
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Fel vid databasoperation: {e}")
-            print("FEL VID SPARANDE:", e)
             flash("Ett fel uppstod när inlägget skulle sparas.", "danger")
+            return render_template("blog/new_post.html", form=form)
+
+        # ✅ Posten är sparad här
+        try:
+            notify_subscribers(new_post)
+        except Exception as e:
+            current_app.logger.warning(f"Posten sparades men mail kunde inte skickas:        {e}")
+            flash("Inlägget sparades, men e-postutskick misslyckades.", "warning")
+
+        flash("Nytt inlägg har publicerats.", "success")
+        return redirect(url_for("blog.index"))
 
     return render_template("blog/new_post.html", form=form)
 
