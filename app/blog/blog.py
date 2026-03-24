@@ -12,8 +12,6 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, render_template, redirect, url_for, current_app, flash, request, abort, jsonify
 from flask_login import login_required, current_user
-from flask_mail import Message
-from werkzeug.utils import secure_filename
 from babel.dates import format_datetime
 
 from app.blog.utils import notify_subscribers
@@ -30,9 +28,6 @@ from app.utils.views import increment_post_views
 blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
 
 logger = logging.getLogger(__name__)  # Loggning
-utc_dt = datetime.utcnow().replace(tzinfo=pytz.utc)
-stockholm_time = utc_dt.astimezone(pytz.timezone("Europe/Stockholm"))
-formatted = format_datetime(stockholm_time, locale='sv_SE')
 
 POSTS_PER_PAGE = 12
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
@@ -46,54 +41,6 @@ def allowed_file(filename):
     """Kontrollera om filen har en tillåten filändelse."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def handle_image_upload(img_file):
-    """
-    Hantera uppladdning och konvertering av bilder:
-    - Spara tillfälligt
-    - Konvertera till WEBP
-    - Optimera storlek till max 800px bredd
-    """
-    if not img_file or img_file.filename == "":
-        return ""
-
-    original_filename = secure_filename(img_file.filename)
-    filename_base, _ = os.path.splitext(original_filename)
-    new_filename = f"{filename_base}.webp"
-
-    upload_folder = os.path.join(current_app.root_path, 'uploads')
-    os.makedirs(upload_folder, exist_ok=True)
-
-    temp_path = os.path.join(upload_folder, original_filename)
-    file_path = os.path.join(upload_folder, new_filename)
-
-    try:
-        img_file.save(temp_path)
-        image = Image.open(temp_path)
-        max_width = 800
-        if image.width > max_width:
-            ratio = max_width / float(image.width)
-            new_height = int(image.height * ratio)
-            image = image.resize((max_width, new_height), Image.LANCZOS)
-        image.save(file_path, format="WEBP", quality=85)
-        os.remove(temp_path)
-        return f"/uploads/{new_filename}"
-    except Exception as e:
-        current_app.logger.error(f"Fel vid bildbehandling: {e}")
-        flash("Ett fel uppstod när bilden skulle hanteras.", "warning")
-        return ""
-
-def send_new_post_notification(post):
-    """
-    Skicka e-postnotis till prenumeranter när nytt inlägg publiceras.
-    """
-    subscribers = User.query.join(User.roles).filter(Role.name == 'subscriber').all()
-    for subscriber in subscribers:
-        msg = Message(
-            subject=f"Nytt blogginlägg: {post.title}",
-            recipients=[subscriber.email],
-            body=f"Ett nytt blogginlägg har publicerats: {post.title}\n\nLäs mer här: {url_for('blog.show_post', post_id=post.id, _external=True)}"
-        )
-        mail.send(msg)
 
 # ================================================
 # ✅ ROUTER – VISA BLOGGINLÄGG
@@ -115,7 +62,6 @@ def index(page=1):
     # Bas‐query: bara publicerade inlägg
     now = get_local_now()
     base_q = BlogPost.query.filter(BlogPost.created_at <= now)
-    admin_q = BlogPost.query.order_by(BlogPost.created_at.desc())
 
     # Hämta alla riktiga kategorier ur blog_categories
     cats = BlogCategory.query.order_by(BlogCategory.title).all()
@@ -181,12 +127,8 @@ def show_post(post_id):
     post = BlogPost.query.get_or_404(post_id)
     now = get_local_now()
 
-    # Tvinga både created_at och updated_at att vara offset-aware (UTC)
-    if post.created_at and post.created_at.tzinfo is None:
-        post.created_at = post.created_at.replace(tzinfo=timezone.utc)
-
-    if post.updated_at and post.updated_at.tzinfo is None:
-        post.updated_at = post.updated_at.replace(tzinfo=timezone.utc)
+    # ✅ Databastiderna är redan i UTC (inget behov av manuell konvertering här)
+    # Konverteringen till lokal tid sker i templates via format_datetime_sv-filtret
 
     # Ladda senaste inlägg för sidfoten
     recent_query = (BlogPost.query
@@ -238,7 +180,7 @@ def new_post():
     """
     Skapa ett nytt blogginlägg:
     - Hanterar bild (konverterar till WEBP)
-    - Hanterar datum/tid (Stockholmstid → UTC)
+    - Hanterar datum/tid (formulärdata → UTC för databas)
     - Skickar notis till prenumeranter
     """
     form = BlogPostForm()
@@ -252,40 +194,29 @@ def new_post():
             try:
                 filename = save_image(form.img_file.data, folder="uploads/blog")
                 img_url = f"uploads/blog/{filename}"
-                print(f"Bild sparad som webp: {img_url}")
             except Exception as e:
                 current_app.logger.error(f"Fel vid bildhantering: {e}")
                 flash("Ett fel uppstod vid bildhantering. Använder standardbild.", "warning")
 
-        # --- Datum- och tidslogik ---
-        selected_date = form.date.data  # datetime.date
-        selected_time_str = form.time.data  # t.ex. "21:21"
-
+        # --- Datum- och tidslogik (NY FÖRENKLAD VERSION) ---
+        from app.utils.time import parse_form_datetime
+        
         try:
-            parsed_time = datetime.strptime(selected_time_str, '%H:%M').time()
-        except ValueError:
-            flash("Ogiltigt tidsformat. Använd HH:MM.", "danger")
+            # Konvertera formulärdata (datum + tid) direkt till UTC
+            post_created_at_utc = parse_form_datetime(
+                str(form.date.data),  # YYYY-MM-DD
+                form.time.data        # HH:MM
+            )
+        except ValueError as e:
+            flash(f"Ogiltigt datum/tid-format: {e}", "danger")
             return render_template("blog/new_post.html", form=form)
-
-        # Kombinera till en naiv datetime (utan tidszon)
-        naive_local_dt = datetime.combine(selected_date, parsed_time)
-
-        # Lokaliserad till Europe/Stockholm
-        local_tz = pytz.timezone("Europe/Stockholm")
-        post_created_at_local = local_tz.localize(naive_local_dt)
-
-        # Konvertera till UTC
-        post_created_at_utc = post_created_at_local.astimezone(pytz.utc)
-
-        print("Created at (local):", post_created_at_local.isoformat())
-        print("Created at (UTC):", post_created_at_utc.isoformat())
 
         # --- Skapa nytt inlägg ---
         new_post = BlogPost(
             title=form.title.data,
             subtitle=form.subtitle.data,
             body=sanitize_html(form.body.data),
-            created_at=post_created_at_utc,
+            created_at=post_created_at_utc,  # ✅ Sparar i UTC
             updated_at=None,
             img_url=img_url,
             category_id=form.category.data,
@@ -305,7 +236,7 @@ def new_post():
         try:
             notify_subscribers(new_post)
         except Exception as e:
-            current_app.logger.warning(f"Posten sparades men mail kunde inte skickas:        {e}")
+            current_app.logger.warning(f"Posten sparades men mail kunde inte skickas: {e}")
             flash("Inlägget sparades, men e-postutskick misslyckades.", "warning")
 
         flash("Nytt inlägg har publicerats.", "success")
@@ -328,9 +259,11 @@ def edit_post(post_id):
     """
     post = BlogPost.query.get_or_404(post_id)
 
-    from app.utils.time import DEFAULT_TZ, get_local_now
-
-    local_created_at = post.created_at.astimezone(DEFAULT_TZ)
+    from app.utils.time import get_display_time
+    
+    # ✅ Konvertera UTC-tid från databas till lokal tid för formuläret
+    local_created_at = get_display_time(post.created_at)
+    
     form = BlogPostForm(
         obj=post,
         date=local_created_at.date(),
@@ -339,6 +272,9 @@ def edit_post(post_id):
 
     cats = BlogCategory.query.order_by(BlogCategory.title).all()
     form.category.choices = [(c.id, c.title) for c in cats]
+
+    if request.method == "GET":
+        form.category.data = post.category_id
 
     if form.validate_on_submit():
         # --- Radera gammal bild ---
@@ -368,7 +304,7 @@ def edit_post(post_id):
 
         # Om något ändrats: sätt updated_at
         if db.session.is_modified(post):
-            post.updated_at = get_local_now()
+            post.updated_at = get_local_now()  # ✅ Sparar i UTC
 
         try:
             db.session.commit()
@@ -481,7 +417,3 @@ def posts_by_category(slug, page=1):
     # --- Rendera kategorisida ---
     return render_template("blog/layout.html", posts=posts, category=category,
                            page=page, total_pages=total_pages, sort_order=sort_order)
-
-
-
-

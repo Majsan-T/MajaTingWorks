@@ -1,21 +1,10 @@
-import datetime
 import bleach
-import pytz
 from bs4 import BeautifulSoup
-from datetime import datetime, date, time
+from datetime import datetime
 from flask import current_app, request
 from flask_login import current_user
 from markupsafe import Markup, escape 
-
-# Standardtidszon för hela appen
-DEFAULT_TZ = pytz.timezone("Europe/Stockholm")
-
-def get_local_now():
-    """
-    ✅ Returnerar aktuell tid i Europe/Stockholm-tidszon.
-    - Används vid sparande av inlägg, kommentarer m.m.
-    """
-    return datetime.now(DEFAULT_TZ)
+from app.utils.time import get_local_now  # ✅ Importera från centraliserad modul
 
 
 def strip_and_truncate(html, length=100):

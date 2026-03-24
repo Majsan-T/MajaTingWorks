@@ -143,9 +143,9 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.Text, nullable=False)
     date_created = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),  # ✅ Alltid med tidszon
         nullable=False,
-        default=lambda: datetime.now(ZoneInfo("Europe/Stockholm"))
+        default=lambda: datetime.now(timezone.utc)  # ✅ Använd UTC konsekvent
     )
     visible = db.Column(db.Boolean, default=True)
     flagged = db.Column(db.Boolean, default=False)

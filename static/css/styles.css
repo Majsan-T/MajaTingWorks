@@ -178,34 +178,23 @@
   position: relative;
 }
 
-/* Bildstil */
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 1rem auto;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border: 1px solid #e9c9a3;
-  position: relative;
-}
-
 /* Förhindra sidbrytning och centrera ensamma bilder inuti block */
-  .post-content p:has(img:only-child),
-  .post-content div:has(img:only-child) {
+.post-content p:has(img:only-child),
+.post-content div:has(img:only-child) {
     page-break-inside: avoid;
     break-inside: avoid;
     text-align: center;
     margin: 2rem auto;
   }
 
-  .post-content p:has(img:only-child) img,
-  .post-content div:has(img:only-child) img {
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-soft);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 100%;
-    height: auto;
-  }
+.post-content p:has(img:only-child) img,
+.post-content div:has(img:only-child) img {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  height: auto;
+}
 
 /* Behåll bra läsbarhet */
 .post-content p {

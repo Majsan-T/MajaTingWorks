@@ -18,8 +18,6 @@ from app.utils.helpers import strip_and_truncate, linebreaks
 from app.models import User, BlogPost, BlogCategory, Comment, PortfolioItem, Category, Role
 from app.cli import fix_post_timestamps, reset_bad_updated_at, register_cli_commands
 
-# from app.blog.utils import check_and_send_blog_emails
-
 # 📁 Hitta basmapp för statiska filer och mallar
 base_dir = os.path.abspath(os.path.dirname(__file__))
 

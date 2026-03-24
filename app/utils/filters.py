@@ -2,8 +2,7 @@
 from markupsafe import Markup, escape
 from babel.dates import format_datetime
 from datetime import datetime
-from app.utils.time import DEFAULT_TZ
-import pytz
+from app.utils.time import DEFAULT_TZ, UTC_TZ
 
 # ===================================================
 # ✅ Egna Jinja-filter för templates
@@ -31,8 +30,12 @@ def format_datetime_sv(dt, fmt="EEEE d MMMM y 'kl.' HH:mm"):
     """
     if not dt:
         return ""
+    
+    # Om naive datetime - anta att det är UTC
     if dt.tzinfo is None:
-        dt = pytz.utc.localize(dt)
-    local_dt = dt.astimezone(pytz.timezone("Europe/Stockholm"))
+        dt = dt.replace(tzinfo=UTC_TZ)
+    
+    # Konvertera till lokal tid
+    local_dt = dt.astimezone(DEFAULT_TZ)
+    
     return format_datetime(local_dt, format=fmt, locale="sv_SE")
-
