@@ -1,18 +1,20 @@
 # MajaTingWorks 🌟
 
-En professionell portfolio, blogg och CV-sida byggd med Flask och MySQL — nu kompatibel med GitHub Pages!
+En professionell portfolio, blogg och CV-sida byggd med Flask och MySQL — med GDPR-säker statistik och automatiska bloggmail!
 
 ---
 
 ## 🚀 Funktioner
 
 - **Blogg** – Skapa, redigera och publicera inlägg med hjälp av den rika texteditorn Quill.
+- **Schemalagda inlägg** – Publicera blogginlägg i framtiden, mail skickas automatiskt när inlägget går live.
 - **Kommentarer** – Inloggade användare kan lämna kommentarer.
 - **Portfolio & CV** – Visa upp projekt, färdigheter och erfarenheter.
 - **Användarroller & Inloggning** – Roller för administratör, användare och prenumerant via Flask-Login.
+- **GDPR-säker statistik** – Session-baserad visningsräkning med bot-filtering och historisk data.
+- **Automatiska e-postnotifieringar** – APScheduler skickar mail till prenumeranter var 15:e minut (ingen cron behövs!).
 - **CaptchaFox** – Skyddar kontaktformuläret mot botar.
-- **Bildkonvertering** – Laddade bilder konverteras automatiskt till WebP med hjälp av Pillow.
-- **E-postnotifieringar** – Skickar mail till prenumeranter när ett nytt blogginlägg publiceras.
+- **Bildkonvertering** – Uppladdade bilder konverteras automatiskt till WebP med hjälp av Pillow.
 - **MySQL + Migreringar** – Drivs av Flask-Migrate.
 
 ---
@@ -26,16 +28,20 @@ MajaTingWorks/
 │   ├── admin/             ← Adminvyer och logik
 │   ├── auth/              ← Inloggning och lösenordshantering
 │   ├── blog/              ← Blogglogik och hjälpverktyg
-│   ├── pages/             ← Statisk sidor: startsida, kontakt, CV
+│   ├── pages/             ← Statiska sidor: startsida, kontakt, CV
 │   ├── portfolio/         ← Portfoliosektion
 │   ├── forms/             ← WTForms-formulär
-│   ├── utils/             ← Hjälpfunktioner: bilder, sanering, notiser
+│   ├── utils/             ← Hjälpfunktioner: bilder, sanering, notiser, statistik
 │   ├── models.py          ← SQLAlchemy-modeller
 │   ├── decorators.py      ← Dekoratorer (t.ex. roles_required)
 │   ├── extensions.py      ← Initiering av db, mail, login, csrf
+│   ├── scheduler.py       ← APScheduler för automatiska bloggmail
 │   └── __init__.py        ← Appfabrik och blueprint-registrering
 ├── migrations/            ← Databasens migreringsmappar
 ├── static/                ← CSS, JS, bilder
+│   ├── uploads/           ← Uppladdade bilder (blogg, portfolio)
+│   ├── blog_category_images/
+│   └── portfolio_category_images/
 ├── templates/             ← Jinja2-mallar
 ├── tools/                 ← Utvecklingsskript
 ├── config.py              ← Appkonfiguration
@@ -62,13 +68,22 @@ source .venv/bin/activate     # macOS/Linux
 pip install -r requirements.txt
 ```
 
+**Viktiga beroenden:**
+- Flask 3.0+
+- SQLAlchemy
+- Flask-Migrate
+- Flask-Mail
+- APScheduler 3.10+ (för automatiska bloggmail)
+- Pillow (bildhantering)
+- PyMySQL (MySQL-koppling)
+
 ### 🔐 Konfigurera miljövariabler
 
 Skapa en `.env`-fil i projektets rot:
 
 ```ini
 DATABASE_URL=mysql+pymysql://<user>:<password>@<host>:3306/<dbname>
-SECRET_KEY=your-super-secret
+SECRET_KEY=your-super-secret-key-here
 MAIL_SERVER=smtp.example.com
 MAIL_PORT=587
 MAIL_USERNAME=your@email.com
@@ -82,7 +97,7 @@ CAPTCHAFOX_SECRET_KEY=ok_...
 
 ```bash
 flask db init
-flask db migrate -m "Första migreringen"
+flask db migrate -m "Initial migration"
 flask db upgrade
 ```
 
@@ -94,169 +109,175 @@ flask run
 
 Besök [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
+När appen startar ska du se:
+```
+📧 Bloggmail-scheduler startad! Körs var 15:e minut.
+```
+
 ---
 
 ## 🧪 Användningsöversikt
 
 | Route             | Beskrivning                      |
 | ----------------- | -------------------------------- |
+| `/`               | Startsida                        |
 | `/blog/`          | Visa blogginlägg                 |
 | `/blog/new_post`  | Skapa nytt inlägg (endast admin) |
 | `/blog/post/<id>` | Visa specifikt inlägg            |
 | `/cv`             | CV-sektion                       |
+| `/contact`        | Kontaktformulär                  |
 | `/portfolio`      | Portfolio-sektion                |
-| `/admin/`         | Adminpanel                       |
+| `/admin/`         | Adminpanel (översikt)            |
+| `/admin/views`    | Visningsstatistik                |
+
+---
+
+## 📊 GDPR-säker statistik
+
+### ✅ Session-baserad visningsräkning
+- **Ingen IP-spårning** – endast session cookies används
+- **Bot-filtering** – Google Bot, Bing Bot m.fl. räknas inte
+- **Unika visningar** – Max 1 visning per session per sida
+- **Historisk data** – Daglig aggregering för trendanalys
+
+### 📈 Databastabeller
+- `page_views` – Kumulativa visningar per sida
+- `daily_stats` – Daglig historik för statistikfilter
+- `blog_posts.views` – Visningar per blogginlägg
+
+### 🔧 Statistikfunktioner
+- **Tidsfilter:** 7 dagar, 30 dagar, 90 dagar, Alla
+- **Aggregering:** Automatisk via CLI-kommando `aggregate-stats`
+- **Adminpanel:** `/admin/views` visar blogg, sidor och portfolio separat
+
+---
+
+## 📧 Automatiska bloggmail med APScheduler
+
+### ⏰ Hur det fungerar
+1. **Skapa inlägg** med framtida publiceringsdatum (t.ex. imorgon kl 17:00)
+2. **Inlägget sparas** med `email_sent = False`
+3. **APScheduler körs var 15:e minut** i bakgrunden
+4. **När klockan blir 17:00** skickas mail automatiskt till prenumeranter
+5. **`email_sent` sätts till True** – inget duplikatmail
+
+### ✅ Fördelar
+- **Ingen cron/cronjob behövs** – APScheduler körs inuti Flask-appen
+- **Automatiskt vid omstart** – Schedulern startar när appen startar
+- **Max 15 minuters delay** – Om inlägg publiceras kl 17:03 skickas mail senast 17:15
+
+### 🔧 Inställningar
+Schedulern startas automatiskt i `app/__init__.py`:
+```python
+from app.scheduler import start_scheduler
+start_scheduler(app)
+```
+
+**Ändra intervall** (valfritt):
+I `app/scheduler.py`, ändra:
+```python
+trigger=IntervalTrigger(minutes=15),  # ← Ändra till 5, 30, 60 etc.
+```
+
+### 📋 Mailutskick-logik
+- **Max 10 blogginlägg** skickas per körning
+- **Alla prenumeranter** får mail för varje inlägg
+- **Manuell utskick:** Via knapp i adminpanelen eller `flask send-blog-mails`
+
+---
+
+## 🛠️ CLI-kommandon
+
+### Bloggmail & Schemaläggning
+
+#### `flask send-blog-mails`
+Skickar mail manuellt (samma som schedulern kör automatiskt):
+```bash
+flask send-blog-mails
+```
+
+### Statistik & Data
+
+#### `flask aggregate-stats`
+Aggregerar visningsstatistik för en specifik dag:
+```bash
+flask aggregate-stats                    # Aggregerar igår
+flask aggregate-stats --date 2026-03-24  # Aggregerar specifikt datum
+```
+
+**Rekommendation:** Kör automatiskt varje natt kl 01:00 via Task Scheduler (Windows) eller cron (Linux/Mac).
+
+#### `flask reset-stats`
+Återställer all statistik till 0 (använd med försiktighet!):
+```bash
+flask reset-stats
+```
+
+### Databasunderhåll
+
+#### `flask fix-post-timestamps`
+Fixar tidszoner för blogginlägg (lägger till UTC om saknas):
+```bash
+flask fix-post-timestamps
+```
+
+#### `flask reset-bad-updated-at`
+Återställer felaktiga `updated_at`-datum (där `updated_at < created_at`):
+```bash
+flask reset-bad-updated-at
+```
+
+---
+
+## 🔐 GDPR & Användarhantering
+
+### ✅ Rollsystem
+- **Admin** – Fullständig åtkomst till adminpanelen
+- **User** – Kan kommentera blogginlägg
+- **Subscriber** – Får mail när nya blogginlägg publiceras
+
+### 🗑️ Anonymisering av konton (GDPR)
+När en användare raderas anonymiseras kontot permanent:
+- Email → `anonymized_<id>@example.com`
+- Namn → `"Raderad användare"`
+- `is_deleted = True`, `is_active = False`
+- **Ej återställbart** – originaldata är borttagen
+
+### 📧 Mailutskick & Dummy-adresser
+Systemet skickar **aldrig** mail till:
+- Anonymiserade konton (`anonymized_*@example.com`)
+- Inaktiva konton (`is_active = False`)
+- Dummy-domäner: `example.com`, `example.net`, `example.org`, `invalid`
 
 ---
 
 ## 🔧 Teknik
 
-- **Besöksräknare:**
-
-  - Blogg- och portfolioposter spårar unika visningar per session (via cookies/sessions).
-  - Inkluderar totalräknare för statiska sidor som `om`, `cv` m.fl.
-  - Sidor som `/portfolio/<id>` och `/blog/post/<id>` uppdaterar databasen när de besöks – men endast en gång per session.
-
-- **Förbättrad användarhantering:**
-
-  - Token-baserad användarskapande (t.ex. via `create_user_token(email)`).
-  - Automatisk lösenordssättning via e-postlänk.
-  - Stöd för roller (admin, användare, prenumerant).
-  - Tidsbegränsade tokens (via `itsdangerous`) med säkert salt.
-
+### Backend
 - **Python 3.11+**
+- **Flask 3.0+** med:
+  - Flask-WTF (formulär + CSRF-skydd)
+  - Flask-Login (autentisering)
+  - Flask-Migrate (databasmigrering)
+  - Flask-Mail (e-postutskick)
+  - Flask-Babel (internationalisering)
+- **SQLAlchemy** + MySQL (via PyMySQL)
+- **APScheduler** (bakgrundsschemaläggning)
+- **Pillow** (bildhantering & WebP-konvertering)
+- **itsdangerous** (säkra tokens)
 
-- **Flask** med:
+### Frontend
+- **Bootstrap 5** (responsiv design)
+- **Quill.js** (rich text editor)
+- **Bootstrap Icons**
+- **Custom CSS** för blogg och portfolio
 
-  - Flask-WTF
-  - Flask-Login
-  - Flask-Migrate
-  - Flask-Mail
-  - Flask-Bootstrap
-  - Flask-CaptchaFox
-  - Flask-Babel
-
-- **SQLAlchemy** + MySQL (PyMySQL)
-
-- **Pillow** för bildhantering
-
-- **itsdangerous** för säkra tokenflöden
-
-- **GitHub Pages–kompatibel** layout
-
----
-
-## ✉️ Mailutskick & GDPR-anpassad Kontohantering
-
-### 🔐 GDPR & Anonymisering av konton
-
-- **Anonymisering:**  
-  När en användare raderas eller ett konto inaktiveras permanent anonymiseras det enligt GDPR.  
-  - Originalmailen ersätts med en dummyadress:  
-    `deleted_user_<id>@example.com`  
-  - Namn ersätts med `"Raderad användare"`.  
-  - Fältet `is_deleted=True` sätts och `is_active` låses till `False`.  
-  - Alla blogginlägg och kommentarer kopplade till kontot anonymiseras eller raderas beroende på systeminställningar.
-
-- **Ej återställbart:**  
-  Anonymisering är **permanent** – användaren kan inte återaktiveras eftersom originaladressen är borta.
-
-- **Adminpanel:**  
-  Admins kan se anonymiserade konton markerade med en grå rad och texten *Inaktiv* i användarlistan.  
-  En "Aktivera"-knapp visas **inte** för anonymiserade konton.
-
-- **Dummy-domäner:**  
-  Dummyadresser använder reserverade domäner (`example.com`) enligt [RFC 2606](https://datatracker.ietf.org/doc/html/rfc2606), vilket gör dem säkra och ej routade.
-
----
-
-### ✉️ Mailutskick & Hantering av prenumeranter
-
-- **Notifieringar:**  
-  - Prenumeranter får automatiska mail när nya blogginlägg publiceras.  
-  - Utskicket sker via kommandot `flask send-blog-mails` eller automatiskt via cron-jobb.
-
-- **Inaktiverade konton & mail:**  
-  - Systemet skickar **aldrig** mail till konton där `is_active=False` eller e-postadressen slutar på:  
-    - `example.com`  
-    - `example.net`  
-    - `example.org`  
-    - `invalid`  
-  - En intern funktion (`is_dummy_email()`) blockerar alla utskick till anonymiserade konton.
-
-- **Avsluta prenumeration:**  
-  Prenumeranter kan själva avregistrera sig via länk i e-postutskick.  
-  Admin kan också inaktivera prenumeranter via adminpanelen.
-
----
-
-## 🚜 Kommandon via terminalen (CLI)
-
-### ✉️ `send-blog-mails`
-
-Skickar e-postnotiser till prenumeranter när ett blogginläggs `created_at`-tidpunkt har passerat och inlägget ännu inte har mejlats ut.
-
-#### ✅ Användning:
-
-```bash
-flask send-blog-mails
-```
-
-> Varje inlägg markeras som skickat genom att sätta `email_sent = True`.
-
----
-
-## 📆 Schemaläggning (Cron Jobs)
-
-Vill du skicka blogginlägg automatiskt varje dag? Lägg till följande rad i din crontab för att köra kommandot kl. 21:00 varje dag:
-
-```cron
-0 21 * * * cd /home/din/sökväg/till/root-mapp && FLASK_APP=main.py FLASK_CLI=true flask send-blog-mails >> logs/send_blog_mails.log 2>&1
-```
-
-📌 **Förutsättningar:**
-
-- Flask CLI måste fungera i din miljö.
-- En `logs/`-mapp måste finnas i projektets rot.
-- Miljövariabler måste vara tillgängliga via `.env` eller systeminställningar.
-
-> Redigera din crontab med `crontab -e`.  
-> I `vim`, tryck `Esc`, skriv `:wq`, och tryck Enter för att spara och avsluta.
-
----
-
-## 🛠️ Utvecklingsverktyg
-
-### 🧹 Rensa projektet (endast Windows)
-
-Scriptet `tools/clean-project.ps1` tar bort tillfälliga filer, såsom:
-
-- Python-cachefiler (`*.pyc`, `__pycache__`)
-- Swap-/backupfiler (`*.bak`, `*~`, etc.)
-- Oanvända `migrations/`-mappar (utan `versions/`)
-- Test- eller tillfälliga bilder (`test`, `temp`, `debug` i `static/`)
-
-Skapar en loggfil med tidsstämpel, t.ex. `tools/clean_log_2025-07-07_1340.txt`
-
-```powershell
-./tools/clean-project.ps1
-```
-
-### 📄 `tools/generate_docs.py`
-
-Genererar dokumentation och snabbguider för vanliga Flask-uppgifter. Skapar `.txt` och `.md`-filer i `docs/`-mappen.
-
-```bash
-python tools/generate_docs.py
-```
-
-### 🤩 `tools/inspect_models.py`
-
-Skriver ut alla databasens tabeller och deras kolumner. Användbart för att kontrollera databasstruktur och felsökning.
-
-```bash
-python tools/inspect_models.py
-```
+### Säkerhet
+- **CSRF-skydd** via Flask-WTF
+- **CaptchaFox** (bot-skydd på kontaktformulär)
+- **Rollbaserad åtkomstkontroll** (`@roles_required`)
+- **Lösenordshasning** (Werkzeug PBKDF2)
+- **Token-baserad lösenordsåterställning** (tidsbegränsade tokens)
 
 ---
 
@@ -272,9 +293,21 @@ python tools/inspect_models.py
 
 ## 🗒️ Att göra
 
-1. Avregistrera sig som användare/prenumerant – Klart  
-2. Förbättrad hantering av datum/tid för `posted_at` och `updated_at` – Klart  
-3. Stöd för lokaliserad översättning (i18n)
+- [ ] Förbättrad bildgalleri för portfolio
+- [ ] RSS-flöde för bloggen
+- [ ] Sök-funktion i bloggen (fulltext search)
+- [ ] Taggar för blogginlägg
+- [ ] Export av statistik till CSV/Excel
+- [ ] Dark mode
+- [ ] Stöd för lokaliserad översättning (i18n/l10n)
+
+**Klart:**
+- [x] Avregistrera sig som användare/prenumerant
+- [x] Förbättrad hantering av datum/tid för `created_at` och `updated_at`
+- [x] GDPR-säker statistik med session-tracking och bot-filtering
+- [x] Automatiska bloggmail med APScheduler (ingen cron behövs)
+- [x] Daglig statistikaggregering med tidsfilter
+- [x] Rollbaserat användarsystem med flera roller per användare
 
 ---
 
@@ -284,5 +317,8 @@ Detta projekt är licensierat under MIT-licensen. Se [LICENSE](LICENSE) för mer
 
 ---
 
+## 💡 Support & Kontakt
+
 Hör gärna av dig om du har frågor eller förslag!
 
+**Utvecklat med ❤️ av Maria Tingvall**
