@@ -65,7 +65,7 @@
 
                 {# --- Kortets bild --- #}
                 <div class="overflow-hidden" style="height: 200px;">
-                    <img src="{{ url_for('static', filename=post.img_url) if post.img_url and post.img_url not in ['', 'default.jpg'] else url_for('static', filename='assets/img/default.jpg') }}"
+                    <img src="{{ url_for('static', filename=post.img_url) if post.img_url and post.img_url not in ['', 'default_portfolio_category.webp'] else url_for('static', filename='assets/img/default_portfolio_category.webp') }}"
                          class="card-img-top object-fit-cover w-100 h-100"
                          alt="Blogginlägg: {{ post.title }}">
                 </div>

@@ -189,7 +189,7 @@ def new_post():
 
     if form.validate_on_submit():
         # --- Bildhantering ---
-        img_url = "assets/img/default.jpg"
+        img_url = "assets/img/default_blog_category.webp"
         if form.img_file.data:
             try:
                 filename = save_image(form.img_file.data, folder="uploads/blog")
@@ -278,13 +278,13 @@ def edit_post(post_id):
 
     if form.validate_on_submit():
         # --- Radera gammal bild ---
-        if form.delete_image.data and post.img_url and post.img_url != "assets/img/default.jpg":
+        if form.delete_image.data and post.img_url and post.img_url != "assets/img/default_blog_category.webp":
             try:
                 delete_existing_image(post.img_url, folder="")
             except Exception as e:
                 current_app.logger.error(f"Fel vid radering av bild: {e}")
                 flash("Kunde inte ta bort bilden.", "warning")
-            post.img_url = "assets/img/default.jpg"
+            post.img_url = "assets/img/default_blog_category.webp"
 
         # --- Ny bild ---
         if form.img_file.data:
@@ -301,10 +301,9 @@ def edit_post(post_id):
         post.subtitle = form.subtitle.data
         post.body = sanitize_html(form.body.data)
         post.category_id = form.category.data
-
-        # Om något ändrats: sätt updated_at
-        if db.session.is_modified(post):
-            post.updated_at = get_local_now()  # ✅ Sparar i UTC
+        
+        # Sätt alltid updated_at när man redigerar
+        post.updated_at = get_local_now()
 
         try:
             db.session.commit()

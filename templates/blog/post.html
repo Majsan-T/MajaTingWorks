@@ -50,13 +50,13 @@
     <div class="col-md-8">
 
       {# --- Inläggsbild --- #}
-      {% if post.img_url and post.img_url != 'default.jpg' %}
+      {% if post.img_url and post.img_url != 'assets/img/default_blog_category.webp' %}
         <div class="overflow-hidden" style="height: 600px;">
           <img src="{{ url_for('static', filename=post.img_url) }}" class="card-img-top object-fit-cover w-100 h-100" alt="Bloggbild">
         </div>
       {% else %}
         <div class="overflow-hidden" style="height: 600px;">
-          <img src="{{ url_for('static', filename='assets/img/default.jpg') }}" class="card-img-top object-fit-cover w-100 h-100" alt="Standardbild">
+          <img src="{{ url_for('static', filename='assets/img/default_blog_category.webp') }}" class="card-img-top object-fit-cover w-100 h-100" alt="Standardbild">
         </div>
       {% endif %}
 
@@ -130,7 +130,7 @@
                     <img src="{{ url_for('static', filename=recent.img_url) }}" class="object-fit-cover w-100 h-100" alt="Thumbnail">
                   </div>
                 {% else %}
-                  <img src="{{ url_for('static', filename='assets/img/default.jpg') }}" class="img-fluid rounded-start" alt="Defaultbild">
+                  <img src="{{ url_for('static', filename='assets/img/default_blog_category.webp') }}" class="img-fluid rounded-start" alt="Defaultbild">
                 {% endif %}
               </div>
               <div class="col-8">

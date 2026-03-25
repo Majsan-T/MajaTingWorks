@@ -58,8 +58,8 @@
       <li class="list-group-item d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
           {% if category.image %}
-            <img src="{{ url_for('static', filename=category.image if category.image else 'assets/img/default_blog_category.webp') }}"
-             onerror="this.src='{{ url_for('static', filename='assets/img/default_blog_category.webp') }}';"
+            <img src="{{ url_for('static', filename=category.image if category.image else 'assets/img/default_portfolio_category.webp') }}"
+             onerror="this.src='{{ url_for('static', filename='assets/img/default_portfolio_category.webp') }}';"
              alt="Kategori-bild för bloggen"
              class="img-thumbnail me-2"
              style="max-width: 100px;">

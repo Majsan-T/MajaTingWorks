@@ -216,3 +216,18 @@ class PageView(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     page = db.Column(db.String(255), unique=True, nullable=False)
     views = db.Column(db.Integer, default=0, nullable=False)
+
+# ================================================
+# ✅ DAGLIG STATISTIK (HISTORIK)
+# ================================================
+class DailyStats(db.Model):
+    """Sparar daglig statistik för historik och trendanalys."""
+    __tablename__ = "daily_stats"
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False, index=True)
+    page = db.Column(db.String(255), nullable=False)
+    views = db.Column(db.Integer, default=0, nullable=False)
+    
+    # Unik constraint: bara en rad per dag per sida
+    __table_args__ = (db.UniqueConstraint('date', 'page', name='_date_page_uc'),)

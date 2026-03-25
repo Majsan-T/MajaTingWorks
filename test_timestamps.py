@@ -156,17 +156,24 @@ def test_roundtrip_conversion():
 @pytest.fixture
 def app():
     """Skapa en testapp."""
+    import os
     from app import create_app
     
+    # Sätt DATABASE_URI före create_app anropas
+    os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
+    os.environ['TESTING'] = 'True'
+    
     app = create_app()
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     
     with app.app_context():
         from app.extensions import db
         db.create_all()
         yield app
         db.drop_all()
+    
+    # Rensa miljövariabler efter testet
+    os.environ.pop('DATABASE_URL', None)
+    os.environ.pop('TESTING', None)
 
 
 @pytest.fixture
