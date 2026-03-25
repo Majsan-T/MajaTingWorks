@@ -5,27 +5,11 @@ from app.blog.utils import check_and_send_blog_emails
 from app.extensions import db
 from app.models import User, Role
 from werkzeug.security import generate_password_hash
+from datetime import timezone
 
 # ===================================================
 # ✅ CLI-KOMMANDON
 # ===================================================
-
-@click.command("send-blog-mails")
-@with_appcontext
-def send_blog_mails():
-    """
-    Skickar e-postnotifieringar för nya blogginlägg.
-
-    ✅ Används via CLI (kommandoraden):
-        flask send-blog-mails
-
-    ✅ Funktion:
-        - Hämtar blogginlägg som ännu inte skickats ut via e-post
-        - Använder check_and_send_blog_emails() i blog.utils
-        - Max 10 mail skickas åt gången (se utils-filen)
-    """
-    check_and_send_blog_emails()
-
 
 @click.command('reset-stats')
 @with_appcontext

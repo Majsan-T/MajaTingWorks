@@ -5,62 +5,53 @@ from app.models import User, BlogPost, db, Role
 from app.extensions import mail
 from datetime import datetime, timezone
 
-# ======================
-# ✅ HANTERA BLOGGMAIL
-# ======================
-
 def check_and_send_blog_emails():
     """
-    Kontrollera publicerade inlägg som ännu inte skickats ut via e-post
-    och skicka max 10 st åt gången.
+    ✅ OPTIMERAD: Skickar max 10 mail åt gången med bättre felhantering
     """
     now = datetime.now(timezone.utc)
     MAX_EMAILS = 10
 
-    # ✅ Hämta inlägg som är publicerade men inte skickade
     pending_posts = BlogPost.query.filter(
         BlogPost.created_at <= now,
         BlogPost.email_sent == False
     ).limit(MAX_EMAILS).all()
 
     if not pending_posts:
-        current_app.logger.info("📭 Inga nya blogginlägg att skicka mail om.")
         return
 
-    current_app.logger.info(f"📨 Hittade {len(pending_posts)} inlägg att skicka ut:")
-    for post in pending_posts:
-        current_app.logger.info(f"   → '{post.title}' (ID: {post.id}, publicerat: {post.created_at})")
+    current_app.logger.info(f"📧 Skickar mail för {len(pending_posts)} inlägg")
 
     for post in pending_posts:
         try:
-            notify_subscribers(post)  # ✅ Skicka mail till alla prenumeranter
+            notify_subscribers(post)
             post.email_sent = True
-            db.session.commit()  # Kommitta efter varje lyckat utskick
-            current_app.logger.info(f"✅ Mail skickat för: '{post.title}' (ID: {post.id})")
+            db.session.commit()  # ✅ Commit efter varje lyckat mail
         except Exception as e:
-            current_app.logger.error(f"❌ Misslyckades skicka mail för post {post.id}: {e}")
+            current_app.logger.error(f"❌ Mail-fel för post {post.id}: {e}")
             db.session.rollback()
+            # ✅ Fortsätt med nästa post istället för att krascha
 
 
 def notify_subscribers(post):
     """
-    Skicka mail om nytt blogginlägg till alla prenumeranter.
-    Om inga prenumeranter finns avslutas funktionen direkt.
+    ✅ OPTIMERAD: Batch-skickar mail med connection pooling
     """
-    from app.extensions import mail  # ✅ För att undvika cirkulär import
-
     subscribers = User.query.join(User.roles).filter(Role.name == "subscriber").all()
+    
     if not subscribers:
         return
 
-    for subscriber in subscribers:
-        try:
-            msg = Message(
-                subject=f"Nytt blogginlägg: {post.title}",
-                sender=current_app.config["MAIL_DEFAULT_SENDER"],
-                recipients=[subscriber.email]
-            )
-            msg.body = f"""
+    # ✅ Skicka i batch om möjligt (beroende på mail-server)
+    with mail.connect() as conn:  # ✅ Återanvänd connection
+        for subscriber in subscribers:
+            try:
+                msg = Message(
+                    subject=f"Nytt blogginlägg: {post.title}",
+                    sender=current_app.config["MAIL_DEFAULT_SENDER"],
+                    recipients=[subscriber.email]
+                )
+                msg.body = f"""
 Hej {subscriber.name},
 
 Ett nytt blogginlägg har publicerats: {post.title}
@@ -73,6 +64,7 @@ Läs mer här:
 Hälsningar,
 Maria Tingvall
 """
-            mail.send(msg)
-        except Exception as e:
-            current_app.logger.warning(f"⚠️ Kunde inte skicka mail till {subscriber.email}: {e}")
+                conn.send(msg)  # ✅ Använd samma connection
+            except Exception as e:
+                current_app.logger.warning(f"⚠️ Kunde inte skicka till {subscriber.email}: {e}")
+                continue  # ✅ Fortsätt med nästa

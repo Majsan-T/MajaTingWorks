@@ -66,12 +66,15 @@ def create_app():
     app.register_blueprint(portfolio_bp, url_prefix='/portfolio')
 
     # ✅ Registrera CLI-kommandon
-    from app.cli import create_admin, send_blog_mails, reset_stats, aggregate_stats
+    from app.cli import create_admin, reset_stats, aggregate_stats
     app.cli.add_command(create_admin)
-    app.cli.add_command(send_blog_mails)
     app.cli.add_command(reset_stats)
     app.cli.add_command(aggregate_stats)
-
+    
+    # ✅ Registrera CLI-kommandon från app/blog/cli.py
+    from app.blog.cli import send_blog_mails
+    app.cli.add_command(send_blog_mails)
+    
     # ✅ Jinja-filter (globala)
     app.jinja_env.filters['strip_and_truncate'] = strip_and_truncate
     app.jinja_env.filters['linebreaks'] = linebreaks
@@ -127,8 +130,5 @@ def create_app():
         current_app.logger.error(f"Global 500 Internal Server Error caught: {error}", exc_info=True)
         return render_template('errors/500.html'), 500
     
-    # ✅ Starta bloggmail-scheduler (lägg till detta längst ner)
-    from app.scheduler import start_scheduler  # Justera importväg efter din struktur
-    start_scheduler(app)
 
     return app
