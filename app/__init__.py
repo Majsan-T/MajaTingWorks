@@ -126,5 +126,9 @@ def create_app():
 
         current_app.logger.error(f"Global 500 Internal Server Error caught: {error}", exc_info=True)
         return render_template('errors/500.html'), 500
+    
+    # ✅ Starta bloggmail-scheduler (lägg till detta längst ner)
+    from app.scheduler import start_scheduler  # Justera importväg efter din struktur
+    start_scheduler(app)
 
     return app

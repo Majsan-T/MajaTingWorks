@@ -232,14 +232,19 @@ def new_post():
             flash("Ett fel uppstod när inlägget skulle sparas.", "danger")
             return render_template("blog/new_post.html", form=form)
 
-        # ✅ Posten är sparad här
-        try:
-            notify_subscribers(new_post)
-        except Exception as e:
-            current_app.logger.warning(f"Posten sparades men mail kunde inte skickas: {e}")
-            flash("Inlägget sparades, men e-postutskick misslyckades.", "warning")
+        # ✅ Inlägget är sparat!
+        # 📧 Mail skickas automatiskt av bakgrundsschedulern när publiceringsdatum passerat
+        
+        # Visa rätt meddelande beroende på när inlägget publiceras
+        now_utc = datetime.now(pytz.utc)
+        if post_created_at_utc <= now_utc:
+            flash("✅ Nytt inlägg har publicerats!", "success")
+        else:
+            # Konvertera till lokal tid för att visa användaren
+            from app.utils.time import DEFAULT_TZ
+            local_time = post_created_at_utc.astimezone(DEFAULT_TZ).strftime('%Y-%m-%d kl. %H:%M')
+            flash(f"📅 Inlägg schemalagt för publicering: {local_time}", "info")
 
-        flash("Nytt inlägg har publicerats.", "success")
         return redirect(url_for("blog.index"))
 
     return render_template("blog/new_post.html", form=form)

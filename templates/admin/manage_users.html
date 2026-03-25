@@ -2,7 +2,32 @@
 {% block title %}Hantera användare{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Hantera användare</h2>
+<style>
+    .user-table td {
+        vertical-align: middle;
+    }
+    .user-table input.form-control-sm {
+        font-size: 0.875rem;
+    }
+    .user-table .form-check {
+        margin-bottom: 0;
+    }
+    .user-table .form-check-label {
+        font-size: 0.8rem;
+        user-select: none;
+    }
+    .action-buttons {
+        min-width: 180px;
+    }
+    .user-row-inactive {
+        background-color: #f8f9fa;
+        opacity: 0.7;
+    }
+</style>
+
+<h2 class="mb-4">
+    <i class="bi bi-people-fill"></i> Hantera användare
+</h2>
 
 <div class="mb-4">
   <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">
@@ -11,126 +36,184 @@
 </div>
 
 <!-- Sökformulär -->
-<form method="GET" class="row g-2 align-items-center mb-4">
-    <div class="col-auto">
-        <input type="text" name="search" class="form-control form-control-sm"
-               placeholder="Sök namn eller email..." value="{{ search }}">
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Sök användare</label>
+                <input type="text" name="search" class="form-control"
+                       placeholder="Namn eller email..." value="{{ search }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Sortera & filtrera</label>
+                <select name="sort" class="form-select">
+                    <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Namn A–Ö</option>
+                    <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Namn Ö–A</option>
+                    <option value="role_user" {% if sort_by == "role_user" %}selected{% endif %}>👤 Endast User</option>
+                    <option value="role_admin" {% if sort_by == "role_admin" %}selected{% endif %}>⚙️ Endast Admin</option>
+                    <option value="role_subscriber" {% if sort_by == "role_subscriber" %}selected{% endif %}>📧 Endast Prenumerant</option>
+                    <option value="inactive" {% if sort_by == "inactive" %}selected{% endif %}>🚫 Endast Inaktiva</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Sök & filtrera
+                </button>
+            </div>
+        </form>
     </div>
-    <div class="col-auto">
-        <select name="sort" class="form-select form-select-sm">
-            <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Namn A–Ö</option>
-            <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Namn Ö–A</option>
-            <option value="role_user" {% if sort_by == "role_user" %}selected{% endif %}>Endast User</option>
-            <option value="role_admin" {% if sort_by == "role_admin" %}selected{% endif %}>Endast Admin</option>
-            <option value="role_subscriber" {% if sort_by == "role_subscriber" %}selected{% endif %}>Endast Prenumerant</option>
-            <option value="inactive" {% if sort_by == "inactive" %}selected{% endif %}>Endast Inaktiva</option>
-        </select>
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-sm btn-primary">Filtrera</button>
-    </div>
-</form>
+</div>
 
 {% if users %}
-<form method="POST" action="{{ url_for('admin.delete_selected_users') }}">
+<!-- ✅ Yttre formulär för massradering -->
+<form method="POST" action="{{ url_for('admin.delete_selected_users') }}" id="bulk-delete-form">
     {{ delete_form.hidden_tag() }}
 
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
+    <table class="table table-hover align-middle user-table">
+        <thead class="table-dark">
             <tr>
-                <th><input type="checkbox" id="select-all"></th>
-                <th>ID</th>
-                <th>Namn / E-post</th>
-                <th>Roller</th>
-                <th>Status</th>
-                <th class="text-center">Åtgärder</th>
+                <th style="width: 50px;">
+                    <input type="checkbox" id="select-all" class="form-check-input">
+                </th>
+                <th style="width: 60px;">ID</th>
+                <th style="width: 280px;">Namn / E-post</th>
+                <th style="width: 250px;">Roller</th>
+                <th style="width: 100px;">Status</th>
+                <th class="text-center action-buttons">Åtgärder</th>
             </tr>
         </thead>
         <tbody>
         {% for user in users %}
-            <tr class="{% if not user.is_active %}table-secondary{% endif %}">
-                <td><input type="checkbox" name="selected_users" value="{{ user.id }}"></td>
+            <tr class="{% if not user.is_active %}user-row-inactive{% endif %}">
+                <!-- ✅ Checkbox för massradering (kopplas till yttre formulär) -->
+                <td><input type="checkbox" name="selected_users" value="{{ user.id }}" form="bulk-delete-form"></td>
                 <td>{{ user.id }}</td>
 
-                <!-- Namn & E-post -->
+                <!-- ✅ Namn & E-post (redigerbart) -->
                 <td>
-                    <form method="POST" action="{{ url_for('admin.update_users') }}" class="d-flex flex-column gap-1">
-                        {{ form.hidden_tag() }}
-                        <input type="hidden" name="update_id" value="{{ user.id }}">
-                        <input type="text" name="users[{{ user.id }}][name]" class="form-control form-control-sm" value="{{ user.name }}">
-                        <input type="email" name="users[{{ user.id }}][email]" class="form-control form-control-sm" value="{{ user.email }}">
+                    <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Namn</label>
+                        <input type="text" name="users[{{ user.id }}][name]" 
+                               class="form-control form-control-sm" 
+                               value="{{ user.name }}"
+                               form="update-form-{{ user.id }}">
+                    </div>
+                    <div>
+                        <label class="form-label small text-muted mb-1">E-post</label>
+                        <input type="email" name="users[{{ user.id }}][email]" 
+                               class="form-control form-control-sm" 
+                               value="{{ user.email }}"
+                               form="update-form-{{ user.id }}">
+                    </div>
                 </td>
 
-                <!-- Roller -->
+                <!-- ✅ Roller (checkboxes kopplade till update-form) -->
                 <td>
                     {% if user.is_active and not user.is_deleted %}
-                        <div class="d-flex flex-wrap gap-1">
+                        <div class="d-flex flex-wrap gap-2">
                             {% for role in roles %}
-                                <div class="form-check me-2">
-                                    <input class="form-check-input" type="checkbox"
+                                {% set role_icons = {
+                                    'admin': 'bi-shield-fill-check',
+                                    'user': 'bi-person-fill',
+                                    'subscriber': 'bi-envelope-fill'
+                                } %}
+                                {% set role_colors = {
+                                    'admin': 'danger',
+                                    'user': 'primary',
+                                    'subscriber': 'success'
+                                } %}
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox"
                                            name="users[{{ user.id }}][roles]"
                                            value="{{ role.name }}"
                                            id="role_{{ user.id }}_{{ role.name }}"
+                                           form="update-form-{{ user.id }}"
                                            {% if role.name in (user.roles | map(attribute='name') | list) %}checked{% endif %}>
-                                    <label class="form-check-label small" for="role_{{ user.id }}_{{ role.name }}">
-                                        {{ role.name.capitalize() }}
+                                    <label class="form-check-label" for="role_{{ user.id }}_{{ role.name }}">
+                                        <span class="badge bg-{{ role_colors[role.name] }} bg-opacity-10 text-{{ role_colors[role.name] }}">
+                                            <i class="bi {{ role_icons[role.name] }}"></i>
+                                            {{ role.name.capitalize() }}
+                                        </span>
                                     </label>
                                 </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <span class="text-muted">Ej möjligt</span>
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-lock"></i> Ej möjligt
+                        </span>
                     {% endif %}
                 </td>
 
-                <!-- Status -->
+                <!-- ✅ Status -->
                 <td>
                     {% if user.is_active %}
-                        <i class="bi bi-check-circle text-success"></i> Aktiv
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle-fill"></i> Aktiv
+                        </span>
                     {% else %}
-                        <i class="bi bi-x-circle text-danger"></i> Inaktiv
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-pause-circle-fill"></i> Inaktiv
+                        </span>
                     {% endif %}
                 </td>
 
-                <!-- Åtgärder -->
+                <!-- ✅ Åtgärder -->
                 <td class="text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                        {% if user.is_deleted %}
-                            <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Ej möjligt</button>
-                        {% else %}
-                            <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}" class="d-inline">
+                    <div class="d-flex flex-column gap-2">
+                        <!-- ✅ SPARA (kopplas till update-form) -->
+                        <button type="submit" class="btn btn-sm btn-primary w-100" form="update-form-{{ user.id }}">
+                            <i class="bi bi-floppy"></i> Spara ändringar
+                        </button>
+
+                        <!-- ✅ Aktivera/Inaktivera (eget formulär) -->
+                        {% if not user.is_deleted %}
+                            <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}">
                                 {{ delete_form.hidden_tag() }}
-                                <button type="submit" class="btn btn-{{ 'warning' if user.is_active else 'success' }}">
+                                <button type="submit" class="btn btn-sm btn-{{ 'outline-warning' if user.is_active else 'outline-success' }} w-100">
+                                    <i class="bi bi-{{ 'pause-circle' if user.is_active else 'play-circle' }}"></i>
                                     {{ "Inaktivera" if user.is_active else "Aktivera" }}
                                 </button>
                             </form>
+                        {% else %}
+                            <button class="btn btn-sm btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-lock"></i> Raderad
+                            </button>
                         {% endif %}
 
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Spara
-                        </button>
+                        <!-- ✅ Radera (eget formulär) -->
+                        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" 
+                              onsubmit="return confirm('⚠️ Vill du verkligen ta bort {{ user.name }}?\n\nDetta går inte att ångra!');">
+                            {{ delete_form.hidden_tag() }}
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                <i class="bi bi-trash3"></i> Radera permanent
+                            </button>
+                        </form>
                     </div>
-                    </form>
-
-                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="d-inline"
-                          onsubmit="return confirm('Vill du ta bort denna användare?');">
-                        {{ delete_form.hidden_tag() }}
-                        <button type="submit" class="btn btn-danger btn-sm mt-1">
-                            <i class="bi bi-trash"></i> Ta bort
-                        </button>
-                    </form>
                 </td>
             </tr>
+
+            <!-- ✅ Dolt formulär för uppdatering (ligger utanför <table>) -->
+            <form method="POST" 
+                  action="{{ url_for('admin.update_users') }}" 
+                  id="update-form-{{ user.id }}" 
+                  style="display: none;">
+                {{ form.hidden_tag() }}
+                <input type="hidden" name="update_id" value="{{ user.id }}">
+            </form>
         {% endfor %}
         </tbody>
     </table>
 
-    <a href="{{ url_for('admin.create_user') }}" class="btn btn-success mt-3">
-        <i class="bi bi-person-plus"></i> Skapa ny användare
-    </a>
-    <button type="submit" class="btn btn-danger mt-3" onclick="return confirm('Vill du radera markerade användare?')">
-        <i class="bi bi-trash"></i> Radera markerade
-    </button>
+    <div class="d-flex gap-2 mt-4">
+        <a href="{{ url_for('admin.create_user') }}" class="btn btn-success">
+            <i class="bi bi-person-plus-fill"></i> Skapa ny användare
+        </a>
+        <button type="submit" class="btn btn-danger" onclick="return confirm('⚠️ Vill du radera alla markerade användare?\n\nDetta går inte att ångra!')">
+            <i class="bi bi-trash3-fill"></i> Radera markerade
+        </button>
+    </div>
 </form>
 
 <script>
@@ -142,4 +225,34 @@
 {% else %}
 <div class="alert alert-info text-center">Inga användare hittades.</div>
 {% endif %}
+
+<!-- ✅ Paginering -->
+{% if pagination.pages > 1 %}
+<nav aria-label="Paginering">
+    <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.manage_users', page=pagination.prev_num, search=search, sort=sort_by) }}">Föregående</a>
+        </li>
+        {% endif %}
+
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.manage_users', page=p, search=search, sort=sort_by) }}">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.manage_users', page=pagination.next_num, search=search, sort=sort_by) }}">Nästa</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
 {% endblock %}

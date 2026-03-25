@@ -23,13 +23,20 @@ def check_and_send_blog_emails():
         BlogPost.email_sent == False
     ).limit(MAX_EMAILS).all()
 
-    current_app.logger.info(f"Hittade {len(pending_posts)} inlägg att skicka ut.")
+    if not pending_posts:
+        current_app.logger.info("📭 Inga nya blogginlägg att skicka mail om.")
+        return
+
+    current_app.logger.info(f"📨 Hittade {len(pending_posts)} inlägg att skicka ut:")
+    for post in pending_posts:
+        current_app.logger.info(f"   → '{post.title}' (ID: {post.id}, publicerat: {post.created_at})")
 
     for post in pending_posts:
         try:
             notify_subscribers(post)  # ✅ Skicka mail till alla prenumeranter
             post.email_sent = True
             db.session.commit()  # Kommitta efter varje lyckat utskick
+            current_app.logger.info(f"✅ Mail skickat för: '{post.title}' (ID: {post.id})")
         except Exception as e:
             current_app.logger.error(f"❌ Misslyckades skicka mail för post {post.id}: {e}")
             db.session.rollback()

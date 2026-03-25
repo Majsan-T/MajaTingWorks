@@ -1084,9 +1084,10 @@ def trigger_blog_mail():
     Manuell körning av schemalagda bloggmails (max 10 åt gången).
     Använder samma funktion som schemalagd automatisk körning.
     """
+    current_app.logger.info("🖱️ MANUELL mailkörning startad av admin (knappen klickad)")
     try:
         check_and_send_blog_emails()  # ✅ Kallar på funktionen i utils.py
-        flash("✅ Bloggmail har skickats (max 10 utskick).", "success")
+        flash("✅ Bloggmail har skickats (max 10 blogginlägg).", "success")
     except Exception as e:
         current_app.logger.error(f"❌ Manuell mailkörning misslyckades: {e}")
         flash("❌ Ett fel uppstod vid försök att skicka mail.", "danger")
@@ -1104,108 +1105,26 @@ def view_statistics():
     - Blogginlägg (sorterade efter flest visningar)
     - Vanliga sidor (sorterade efter flest visningar)
     - Portfolio (inklusive totalantal för portfolio)
-    
-    Med tidsfilter: 7, 30, 90 dagar eller allt
     """
-    from datetime import date, timedelta
-    from sqlalchemy import func
-    from app.models import DailyStats
-    
-    # Hämta vald tidsperiod från query params
-    days = request.args.get('days', '30', type=str)
-    
-    # Bestäm start-datum baserat på filter
-    if days == 'all':
-        start_date = None
-        period_label = "Totalt (sedan start)"
-    else:
-        days_int = int(days)
-        start_date = date.today() - timedelta(days=days_int)
-        period_label = f"Senaste {days_int} dagarna"
 
-    # ✅ Aggregera blogginlägg från DailyStats
-    if start_date:
-        blog_query = db.session.query(
-            DailyStats.page,
-            func.sum(DailyStats.views).label('views')
-        ).filter(
-            DailyStats.date >= start_date,
-            DailyStats.page.like('post_%')
-        ).group_by(DailyStats.page)
-    else:
-        # Använd BlogPost.views direkt för "allt"
-        blog_posts = BlogPost.query.order_by(BlogPost.views.desc()).all()
-    
-    # Om vi filtrerar på datum: hämta post-titlar
-    if start_date:
-        blog_data = blog_query.all()
-        blog_posts = []
-        for page, views in blog_data:
-            post_id = int(page.split('_')[1])
-            post = BlogPost.query.get(post_id)
-            if post:
-                # Skapa ett pseudo-objekt med title och views
-                class PostStats:
-                    def __init__(self, id, title, views):
-                        self.id = id
-                        self.title = title
-                        self.views = views
-                blog_posts.append(PostStats(post.id, post.title, views))
-        blog_posts.sort(key=lambda x: x.views, reverse=True)
+    # ✅ Hämta alla blogginlägg sorterade efter visningar (högst först)
+    blog_posts = BlogPost.query.order_by(BlogPost.views.desc()).all()
 
-    # ✅ Aggregera vanliga sidor från DailyStats
-    if start_date:
-        pages_query = db.session.query(
-            DailyStats.page,
-            func.sum(DailyStats.views).label('views')
-        ).filter(
-            DailyStats.date >= start_date,
-            ~DailyStats.page.like('post_%'),
-            ~DailyStats.page.like('portfolio_%')
-        ).group_by(DailyStats.page)
-        
-        pages_data = pages_query.all()
-        pages = []
-        for page, views in pages_data:
-            class PageStats:
-                def __init__(self, page, views):
-                    self.page = page
-                    self.views = views
-            pages.append(PageStats(page, views))
-        pages.sort(key=lambda x: x.views, reverse=True)
-    else:
-        pages = PageView.query.filter(
-            PageView.page.notlike("portfolio_%"),
-            PageView.page.notlike("post_%")
-        ).order_by(PageView.views.desc()).all()
+    # ✅ Hämta alla vanliga sidor (exkluderar portfolio)
+    pages = PageView.query.filter(PageView.page.notlike("portfolio_%")).order_by(PageView.views.desc()).all()
 
-    # ✅ Aggregera portfolio från DailyStats
-    if start_date:
-        portfolio_query = db.session.query(
-            DailyStats.page,
-            func.sum(DailyStats.views).label('views')
-        ).filter(
-            DailyStats.date >= start_date,
-            DailyStats.page.like('portfolio_%')
-        ).group_by(DailyStats.page)
-        
-        portfolio_views_data = portfolio_query.all()
-    else:
-        portfolio_views_data = [(pv.page, pv.views) for pv in PageView.query.filter(
-            PageView.page.like("portfolio_%")
-        ).all()]
-    
-    portfolio_data = []
-    total_portfolio_views = 0
-    
-    for page, views in portfolio_views_data:
-        item_id = page.split("_")[1]
+    portfolio_views = PageView.query.filter(PageView.page.like("portfolio_%")).order_by(PageView.views.desc()).all()
+    portfolio_data = []          # Lista med {"title": ..., "views": ...}
+    total_portfolio_views = 0    # Summerar alla visningar på portfolio
+
+    # ✅ Loopar genom portfolio-sidor och hämtar titlar
+    for view in portfolio_views:
+        item_id = view.page.split("_")[1]                           # Exempel: "portfolio_5" → ID = 5
         item = PortfolioItem.query.get(item_id)
         if item:
-            portfolio_data.append({"title": item.title, "views": views})
-            total_portfolio_views += views
-    
-    portfolio_data.sort(key=lambda x: x['views'], reverse=True)
+            portfolio_data.append({"title": item.title,             # Namn på portfolio-inlägget
+                                   "views": view.views})            # Antal visningar
+            total_portfolio_views += view.views                     # ✅ Addera till totalen
 
     # ✅ Mappning för att visa svenska namn på sidor
     page_name_map = {
@@ -1233,8 +1152,6 @@ def view_statistics():
         pages=pages,
         portfolio_data=portfolio_data,
         total_portfolio_views=total_portfolio_views,
-        page_name_map=page_name_map,
-        page_url_map=page_url_map,
-        period_label=period_label,
-        selected_days=days
+        page_name_map=page_name_map,      # ✅ Skickar mappning av sidnamn
+        page_url_map=page_url_map         # ✅ Skickar URL-mappning
     )
