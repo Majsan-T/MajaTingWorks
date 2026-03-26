@@ -47,7 +47,8 @@ MajaTingWorks/
 ├── config.py              ← Appkonfiguration
 ├── main.py                ← Startfil för appen / CLI
 ├── requirements.txt       ← Beroenden
-└── README.md              ← Denna fil
+├── README.md              ← Denna fil
+└── backup_blog.py         ← Backup av bloggen
 ```
 
 ---
